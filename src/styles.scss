@@ -1,0 +1,228 @@
+@use "tailwindcss";
+@use '@ionic/angular/css/core.css';
+@use '@ionic/angular/css/normalize.css';
+@use '@ionic/angular/css/structure.css';
+@use '@ionic/angular/css/typography.css';
+@use '@ionic/angular/css/padding.css';
+@use '@ionic/angular/css/float-elements.css';
+@use '@ionic/angular/css/text-alignment.css';
+@use '@ionic/angular/css/text-transformation.css';
+@use '@ionic/angular/css/flex-utils.css';
+@use '@ionic/angular/css/display.css';
+
+/* ═══════════════════════════════════════════════════════════
+   Sport Aggregator — Dark-first Theme
+   Fonts: Sora (headings), DM Sans (body)
+   Palette: Coral #FF6B4A, Green #4ADE80, Red #E8002D, Charcoal #111116
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --ion-font-family: 'DM Sans', sans-serif;
+  --font-heading: 'Sora', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+
+  --accent: #FF6B4A;
+  --accent-rgb: 255, 107, 74;
+  --success: #4ADE80;
+  --f1-red: #E8002D;
+  --football-green: #4ADE80;
+
+  --ion-color-primary: #FF6B4A;
+  --ion-color-primary-rgb: 255, 107, 74;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-shade: #e05a3a;
+  --ion-color-primary-tint: #ff7d5f;
+
+  --ion-color-secondary: #4ADE80;
+  --ion-color-secondary-rgb: 74, 222, 128;
+  --ion-color-secondary-contrast: #111116;
+
+  --ion-color-success: #4ADE80;
+  --ion-color-success-rgb: 74, 222, 128;
+  --ion-color-success-contrast: #111116;
+
+  --ion-color-danger: #EF4444;
+  --ion-color-danger-rgb: 239, 68, 68;
+  --ion-color-danger-contrast: #ffffff;
+
+  --ion-color-warning: #F59E0B;
+  --ion-color-warning-rgb: 245, 158, 11;
+  --ion-color-warning-contrast: #111116;
+
+  --ion-color-medium: #6B7280;
+  --ion-color-medium-rgb: 107, 114, 128;
+  --ion-color-medium-contrast: #ffffff;
+
+  --ion-color-light: #1C1C24;
+  --ion-color-light-rgb: 28, 28, 36;
+  --ion-color-light-contrast: #ffffff;
+
+  --ion-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+body, body.dark {
+  font-family: 'DM Sans', sans-serif;
+  background: #111116;
+  color: #E8E8ED;
+
+  --ion-background-color: #111116;
+  --ion-background-color-rgb: 17, 17, 22;
+  --ion-text-color: #E8E8ED;
+  --ion-text-color-rgb: 232, 232, 237;
+  --ion-item-background: transparent;
+  --ion-card-background: #1C1C24;
+  --ion-toolbar-background: #111116;
+  --ion-tab-bar-background: #111116;
+  --ion-tab-bar-color: #6B7280;
+  --ion-tab-bar-color-selected: #FF6B4A;
+  --ion-border-color: #252530;
+
+  --card-bg: #1C1C24;
+  --card-border: #252530;
+  --text-muted: #6B7280;
+  --text-secondary: #9CA3AF;
+}
+
+body:not(.dark) {
+  background: #FAFAF8;
+  color: #1A1A2E;
+
+  --ion-background-color: #FAFAF8;
+  --ion-text-color: #1A1A2E;
+  --ion-item-background: transparent;
+  --ion-card-background: #FFFFFF;
+  --ion-toolbar-background: #FAFAF8;
+  --ion-tab-bar-background: #FAFAF8;
+  --ion-tab-bar-color: #9CA3AF;
+  --ion-tab-bar-color-selected: #FF6B4A;
+  --ion-border-color: #E5E7EB;
+
+  --card-bg: #FFFFFF;
+  --card-border: #F3F4F6;
+  --text-muted: #9CA3AF;
+  --text-secondary: #6B7280;
+}
+
+h1, h2, h3, h4, h5, h6,
+ion-title, ion-card-title {
+  font-family: 'Sora', sans-serif !important;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+ion-toolbar {
+  --background: transparent !important;
+  --border-width: 0 !important;
+  --min-height: 56px;
+}
+
+ion-toolbar[color="primary"] {
+  --background: transparent !important;
+  --color: var(--ion-text-color) !important;
+  ion-title {
+    font-family: 'Sora', sans-serif !important;
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: -0.02em;
+  }
+}
+
+ion-header::after { display: none !important; }
+
+ion-content {
+  --background: var(--ion-background-color);
+  --padding-bottom: 60px !important;
+}
+
+ion-content::part(scroll) {
+  padding-bottom: 60px !important;
+}
+
+ion-tab-bar {
+  border-top: 1px solid var(--ion-border-color);
+  --background: var(--ion-tab-bar-background);
+  height: 56px;
+  padding-bottom: var(--ion-safe-area-bottom);
+
+  ion-tab-button {
+    --color: var(--ion-tab-bar-color);
+    --color-selected: #FF6B4A;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: color 0.2s ease;
+
+    ion-icon { font-size: 22px; margin-bottom: 2px; }
+  }
+}
+
+ion-card {
+  border-radius: 16px !important;
+  border: 1px solid var(--card-border);
+  box-shadow: none !important;
+  margin: 12px 0;
+}
+
+ion-item {
+  --background: transparent;
+  --border-color: var(--ion-border-color);
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  font-family: 'DM Sans', sans-serif;
+}
+
+ion-list {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+ion-segment {
+  --background: var(--card-bg);
+  border-radius: 12px;
+}
+
+ion-segment-button {
+  --indicator-color: #FF6B4A;
+  --color-checked: #fff;
+  font-weight: 600;
+  font-size: 0.78rem;
+  --border-radius: 10px;
+  min-height: 36px;
+}
+
+ion-button {
+  --background: #FF6B4A;
+  --color: #fff;
+  --border-radius: 12px;
+  font-weight: 700;
+  font-family: 'Sora', sans-serif;
+}
+
+ion-select {
+  --background: var(--card-bg);
+  --padding-start: 12px;
+  --padding-end: 12px;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
+ion-toggle {
+  --background: #252530;
+  --background-checked: #FF6B4A;
+  --handle-background: #6B7280;
+  --handle-background-checked: #ffffff;
+}
+
+ion-chip {
+  --background: #252530;
+  --color: var(--ion-text-color);
+  font-size: 0.78rem;
+  height: 32px;
+}
+
+ion-badge {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+}
