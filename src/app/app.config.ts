@@ -5,6 +5,11 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideHttpClient } from '@angular/common/http';
 import { routes } from './app.routes';
 
+import { getApp, initializeApp, provideFirebaseApp } from '@angular/fire/app';
+import { browserLocalPersistence, getAuth, indexedDBLocalPersistence, initializeAuth, inMemoryPersistence, provideAuth } from '@angular/fire/auth';
+import { getAnalytics, provideAnalytics, ScreenTrackingService, UserTrackingService } from '@angular/fire/analytics';
+import { firebaseConfig } from '../environment/environment';
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -12,5 +17,11 @@ export const appConfig: ApplicationConfig = {
     provideIonicAngular({ mode: 'ios' }),
     provideAnimationsAsync(),
     provideHttpClient(),
+    provideFirebaseApp(() =>
+      initializeApp({
+        ...firebaseConfig,
+      }),
+    ),
+    provideAnalytics(() => getAnalytics()),
   ],
 };
