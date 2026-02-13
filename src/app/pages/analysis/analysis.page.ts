@@ -25,7 +25,7 @@ import { Team, Driver, Race } from '../../models';
   template: `
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>📊 Analysis</ion-title>
+        <ion-title><span style="font-family: Outfit, sans-serif; font-weight: 800; letter-spacing: 0.06em; font-size: 1rem; color: var(--accent-gold)">📊 INSIGHTS</span></ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -218,8 +218,8 @@ import { Team, Driver, Race } from '../../models';
     .analysis-card { --background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px !important; }
     .stat-grid { display: flex; justify-content: space-around; padding: 16px 0; border-bottom: 1px solid var(--card-border); }
     .stat-item { text-align: center; }
-    .stat-value { font-family: 'Sora', sans-serif; font-size: 1.6rem; font-weight: 800; display: block; }
-    .stat-value.accent { color: #FF6B4A; }
+    .stat-value { font-family: 'JetBrains Mono', monospace; font-size: 1.6rem; font-weight: 800; display: block; }
+    .stat-value.accent { color: var(--accent-gold); }
     .stat-value.muted { color: var(--text-muted); }
     .stat-label { font-size: 0.7rem; color: var(--text-muted); }
     .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--card-border); font-size: 0.85rem; }

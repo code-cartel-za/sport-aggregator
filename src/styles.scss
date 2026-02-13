@@ -11,35 +11,46 @@
 @use '@ionic/angular/css/display.css';
 
 /* ═══════════════════════════════════════════════════════════
-   Sport Aggregator — Dark-first Theme
-   Fonts: Sora (headings), DM Sans (body)
-   Palette: Coral #FF6B4A, Green #4ADE80, Red #E8002D, Charcoal #111116
+   Sport Aggregator — Command Center Theme
+   Fonts: Outfit (headings), Plus Jakarta Sans (body), JetBrains Mono (data)
    ═══════════════════════════════════════════════════════════ */
 
 :root {
-  --ion-font-family: 'DM Sans', sans-serif;
-  --font-heading: 'Sora', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
+  --ion-font-family: 'Plus Jakarta Sans', sans-serif;
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
-  --accent: #FF6B4A;
-  --accent-rgb: 255, 107, 74;
-  --success: #4ADE80;
-  --f1-red: #E8002D;
-  --football-green: #4ADE80;
+  /* Command Center Palette */
+  --bg: #060D18;
+  --surface: #0F1A2E;
+  --surface-elevated: #162036;
+  --border: #1E2D4A;
+  --accent-gold: #D4A847;
+  --accent-gold-rgb: 212, 168, 71;
+  --accent-blue: #3B82F6;
+  --accent-blue-rgb: 59, 130, 246;
+  --success: #00D68F;
+  --danger: #EF4444;
+  --warning: #F59E0B;
+  --text-primary: #E8ECF1;
+  --text-secondary: #8896AB;
+  --text-muted: #4A5568;
 
-  --ion-color-primary: #FF6B4A;
-  --ion-color-primary-rgb: 255, 107, 74;
-  --ion-color-primary-contrast: #ffffff;
-  --ion-color-primary-shade: #e05a3a;
-  --ion-color-primary-tint: #ff7d5f;
+  /* Ionic overrides */
+  --ion-color-primary: #D4A847;
+  --ion-color-primary-rgb: 212, 168, 71;
+  --ion-color-primary-contrast: #060D18;
+  --ion-color-primary-shade: #b8923e;
+  --ion-color-primary-tint: #d9b259;
 
-  --ion-color-secondary: #4ADE80;
-  --ion-color-secondary-rgb: 74, 222, 128;
-  --ion-color-secondary-contrast: #111116;
+  --ion-color-secondary: #3B82F6;
+  --ion-color-secondary-rgb: 59, 130, 246;
+  --ion-color-secondary-contrast: #ffffff;
 
-  --ion-color-success: #4ADE80;
-  --ion-color-success-rgb: 74, 222, 128;
-  --ion-color-success-contrast: #111116;
+  --ion-color-success: #00D68F;
+  --ion-color-success-rgb: 0, 214, 143;
+  --ion-color-success-contrast: #060D18;
 
   --ion-color-danger: #EF4444;
   --ion-color-danger-rgb: 239, 68, 68;
@@ -47,68 +58,55 @@
 
   --ion-color-warning: #F59E0B;
   --ion-color-warning-rgb: 245, 158, 11;
-  --ion-color-warning-contrast: #111116;
+  --ion-color-warning-contrast: #060D18;
 
-  --ion-color-medium: #6B7280;
-  --ion-color-medium-rgb: 107, 114, 128;
-  --ion-color-medium-contrast: #ffffff;
+  --ion-color-medium: #8896AB;
+  --ion-color-medium-rgb: 136, 150, 171;
+  --ion-color-medium-contrast: #060D18;
 
-  --ion-color-light: #1C1C24;
-  --ion-color-light-rgb: 28, 28, 36;
-  --ion-color-light-contrast: #ffffff;
+  --ion-color-light: #0F1A2E;
+  --ion-color-light-rgb: 15, 26, 46;
+  --ion-color-light-contrast: #E8ECF1;
 
   --ion-safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 body, body.dark {
-  font-family: 'DM Sans', sans-serif;
-  background: #111116;
-  color: #E8E8ED;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
 
-  --ion-background-color: #111116;
-  --ion-background-color-rgb: 17, 17, 22;
-  --ion-text-color: #E8E8ED;
-  --ion-text-color-rgb: 232, 232, 237;
+  --ion-background-color: var(--bg);
+  --ion-background-color-rgb: 6, 13, 24;
+  --ion-text-color: var(--text-primary);
+  --ion-text-color-rgb: 232, 236, 241;
   --ion-item-background: transparent;
-  --ion-card-background: #1C1C24;
-  --ion-toolbar-background: #111116;
-  --ion-tab-bar-background: #111116;
-  --ion-tab-bar-color: #6B7280;
-  --ion-tab-bar-color-selected: #FF6B4A;
-  --ion-border-color: #252530;
+  --ion-card-background: var(--surface);
+  --ion-toolbar-background: var(--bg);
+  --ion-tab-bar-background: var(--bg);
+  --ion-tab-bar-color: var(--text-muted);
+  --ion-tab-bar-color-selected: var(--accent-gold);
+  --ion-border-color: var(--border);
 
-  --card-bg: #1C1C24;
-  --card-border: #252530;
-  --text-muted: #6B7280;
-  --text-secondary: #9CA3AF;
+  --card-bg: var(--surface);
+  --card-border: var(--border);
 }
 
-body:not(.dark) {
-  background: #FAFAF8;
-  color: #1A1A2E;
-
-  --ion-background-color: #FAFAF8;
-  --ion-text-color: #1A1A2E;
-  --ion-item-background: transparent;
-  --ion-card-background: #FFFFFF;
-  --ion-toolbar-background: #FAFAF8;
-  --ion-tab-bar-background: #FAFAF8;
-  --ion-tab-bar-color: #9CA3AF;
-  --ion-tab-bar-color-selected: #FF6B4A;
-  --ion-border-color: #E5E7EB;
-
-  --card-bg: #FFFFFF;
-  --card-border: #F3F4F6;
-  --text-muted: #9CA3AF;
-  --text-secondary: #6B7280;
-}
+/* ── Typography ── */
 
 h1, h2, h3, h4, h5, h6,
 ion-title, ion-card-title {
-  font-family: 'Sora', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
   font-weight: 700;
   letter-spacing: -0.02em;
+  color: var(--text-primary);
 }
+
+.font-mono, .data-value {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* ── Ionic Component Overrides ── */
 
 ion-toolbar {
   --background: transparent !important;
@@ -118,9 +116,9 @@ ion-toolbar {
 
 ion-toolbar[color="primary"] {
   --background: transparent !important;
-  --color: var(--ion-text-color) !important;
+  --color: var(--text-primary) !important;
   ion-title {
-    font-family: 'Sora', sans-serif !important;
+    font-family: 'Outfit', sans-serif !important;
     font-weight: 700;
     font-size: 1.4rem;
     letter-spacing: -0.02em;
@@ -130,7 +128,7 @@ ion-toolbar[color="primary"] {
 ion-header::after { display: none !important; }
 
 ion-content {
-  --background: var(--ion-background-color);
+  --background: var(--bg);
   --padding-bottom: 60px !important;
 }
 
@@ -139,15 +137,15 @@ ion-content::part(scroll) {
 }
 
 ion-tab-bar {
-  border-top: 1px solid var(--ion-border-color);
-  --background: var(--ion-tab-bar-background);
+  border-top: 1px solid var(--border);
+  --background: var(--bg);
   height: 56px;
   padding-bottom: var(--ion-safe-area-bottom);
 
   ion-tab-button {
-    --color: var(--ion-tab-bar-color);
-    --color-selected: #FF6B4A;
-    font-family: 'DM Sans', sans-serif;
+    --color: var(--text-muted);
+    --color-selected: var(--accent-gold);
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 0.68rem;
     font-weight: 600;
     letter-spacing: 0.02em;
@@ -158,18 +156,19 @@ ion-tab-bar {
 }
 
 ion-card {
-  border-radius: 16px !important;
-  border: 1px solid var(--card-border);
+  border-radius: 14px !important;
+  border: 1px solid var(--border);
   box-shadow: none !important;
   margin: 12px 0;
+  --background: var(--surface);
 }
 
 ion-item {
   --background: transparent;
-  --border-color: var(--ion-border-color);
+  --border-color: var(--border);
   --padding-start: 0;
   --inner-padding-end: 0;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 ion-list {
@@ -178,51 +177,135 @@ ion-list {
 }
 
 ion-segment {
-  --background: var(--card-bg);
-  border-radius: 12px;
+  --background: var(--surface);
+  border-radius: 10px;
+  border: 1px solid var(--border);
 }
 
 ion-segment-button {
-  --indicator-color: #FF6B4A;
-  --color-checked: #fff;
+  --indicator-color: var(--accent-gold);
+  --color: var(--text-secondary);
+  --color-checked: var(--bg);
   font-weight: 600;
   font-size: 0.78rem;
-  --border-radius: 10px;
+  --border-radius: 8px;
   min-height: 36px;
 }
 
 ion-button {
-  --background: #FF6B4A;
-  --color: #fff;
-  --border-radius: 12px;
+  --background: var(--accent-gold);
+  --color: var(--bg);
+  --border-radius: 10px;
   font-weight: 700;
-  font-family: 'Sora', sans-serif;
+  font-family: 'Outfit', sans-serif;
 }
 
 ion-select {
-  --background: var(--card-bg);
+  --background: var(--surface);
   --padding-start: 12px;
   --padding-end: 12px;
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
   font-size: 0.85rem;
+  color: var(--text-primary);
 }
 
 ion-toggle {
-  --background: #252530;
-  --background-checked: #FF6B4A;
-  --handle-background: #6B7280;
-  --handle-background-checked: #ffffff;
+  --background: var(--surface-elevated);
+  --background-checked: var(--accent-gold);
+  --handle-background: var(--text-muted);
+  --handle-background-checked: var(--bg);
 }
 
 ion-chip {
-  --background: #252530;
-  --color: var(--ion-text-color);
+  --background: var(--surface-elevated);
+  --color: var(--text-primary);
   font-size: 0.78rem;
   height: 32px;
+  border: 1px solid var(--border);
 }
 
 ion-badge {
-  font-family: 'Sora', sans-serif;
+  font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
 }
+
+ion-back-button {
+  --color: var(--accent-gold);
+}
+
+/* ── Command Center Utilities ── */
+
+.gold-accent {
+  color: var(--accent-gold);
+}
+
+.blue-accent {
+  color: var(--accent-blue);
+}
+
+.gradient-line {
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-gold), var(--accent-blue));
+  border-radius: 1px;
+}
+
+.glass-card {
+  background: rgba(15, 26, 46, 0.7) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(30, 45, 74, 0.6);
+  border-radius: 14px;
+}
+
+.gold-border-card {
+  border: 1px solid rgba(212, 168, 71, 0.25) !important;
+}
+
+.card-surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+/* ── Animations ── */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in {
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+.animate-fade-in-delay-1 { animation: fadeInUp 0.4s ease-out 0.1s both; }
+.animate-fade-in-delay-2 { animation: fadeInUp 0.4s ease-out 0.2s both; }
+.animate-fade-in-delay-3 { animation: fadeInUp 0.4s ease-out 0.3s both; }
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface-elevated) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* ── Scrollbar ── */
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── Bottom spacer ── */
+.bottom-spacer { height: 80px; }

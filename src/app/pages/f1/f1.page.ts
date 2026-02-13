@@ -22,7 +22,7 @@ import { Race, DriverStanding, ConstructorStanding } from '../../models';
   template: `
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>🏎 Formula 1</ion-title>
+        <ion-title><span style="font-family: Outfit, sans-serif; font-weight: 800; letter-spacing: 0.06em; font-size: 1rem; color: var(--accent-gold)">🏎 FORMULA 1</span></ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -119,7 +119,7 @@ import { Race, DriverStanding, ConstructorStanding } from '../../models';
     .race-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
     .round-badge { font-weight: 700; font-size: 0.72rem; --background: #E8002D; }
     .race-date { font-size: 0.75rem; color: var(--text-muted); }
-    .race-name { font-family: 'Sora', sans-serif; font-weight: 700; font-size: 1rem; }
+    .race-name { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1rem; }
     .race-circuit { font-size: 0.85rem; color: var(--text-secondary); margin-top: 2px; }
     .race-location { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
 
@@ -128,7 +128,7 @@ import { Race, DriverStanding, ConstructorStanding } from '../../models';
       border-bottom: 1px solid var(--card-border);
     }
     .driver-pos, .con-pos {
-      width: 28px; text-align: center; font-weight: 800; font-family: 'Sora', sans-serif;
+      width: 28px; text-align: center; font-weight: 800; font-family: 'Outfit', sans-serif;
       font-size: 0.9rem; color: var(--text-muted);
     }
     .driver-pos.podium { color: #FFD700; }
@@ -138,7 +138,7 @@ import { Race, DriverStanding, ConstructorStanding } from '../../models';
     .driver-name strong { font-weight: 800; }
     .driver-team, .con-nat { font-size: 0.72rem; color: var(--text-muted); }
     .driver-stats, .con-stats { text-align: right; }
-    .driver-points, .con-points { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1rem; color: #FF6B4A; display: block; }
+    .driver-points, .con-points { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1rem; color: var(--accent-gold); display: block; }
     .driver-wins, .con-wins { font-size: 0.68rem; color: var(--text-muted); }
 
     .empty-state { text-align: center; padding: 40px; color: var(--text-muted); }
