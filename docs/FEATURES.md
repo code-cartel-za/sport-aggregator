@@ -295,6 +295,118 @@ functions/src/@types/
 
 ---
 
+## Subscription & Consent Flows
+
+### First Login → Consent Flow
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant App as App
+    participant CG as consentGuard
+    participant CP as Consent Page
+    participant FS as Firestore
+
+    User->>App: Login success
+    App->>CG: Navigate to /home
+    CG->>FS: Check users/{uid}/consent
+    alt No consent record
+        CG->>CP: Redirect to /consent
+        CP->>User: Show checkboxes (terms ✓, privacy ✓, data processing ✓, marketing ○, analytics ○)
+        User->>CP: Check required + submit
+        CP->>FS: Store ConsentRecord with version + timestamp
+        CP->>App: Navigate to /home
+    else Consent exists
+        CG->>App: Allow navigation
+    end
+```
+
+### Feature Access & Paywall Flow
+
+```mermaid
+flowchart TD
+    USER[User taps feature] --> TIER{TierService.canAccessFeature}
+    TIER -->|full access| SHOW[Show content]
+    TIER -->|limited| USAGE{UsageTrackingService.canUse}
+    USAGE -->|within limit| SHOW
+    USAGE -->|limit reached| PAYWALL[Show Paywall Modal]
+    TIER -->|preview/blurred| BLUR[BlurredContentComponent]
+    BLUR -->|user taps| PAYWALL
+    TIER -->|none| PAYWALL
+
+    PAYWALL --> TOGGLE{Monthly / Yearly toggle}
+    TOGGLE --> PLATFORM{Platform?}
+    PLATFORM -->|iOS| STOREKIT[StoreKit IAP]
+    PLATFORM -->|Android| PLAYBILL[Google Play Billing]
+    PLATFORM -->|Web| STRIPE[Stripe Checkout]
+    STOREKIT --> VERIFY[Verify receipt → Firestore]
+    PLAYBILL --> VERIFY
+    STRIPE --> VERIFY
+    VERIFY --> UPDATE[Update UserSubscription]
+    UPDATE --> SHOW
+```
+
+### Usage Tracking Daily Cycle
+
+```mermaid
+flowchart LR
+    ACTION[User action] --> TRACK[UsageTrackingService.trackUsage]
+    TRACK --> CHECK{Daily limit reached?}
+    CHECK -->|No| ALLOW[Allow + increment counter]
+    CHECK -->|Yes| BADGE[Show UsageBadge '3/3 used']
+    BADGE --> PAYWALL[Paywall: 'Upgrade for unlimited']
+
+    MIDNIGHT[Midnight UTC] --> RESET[resetDailyUsage]
+    RESET --> SYNC[Sync to Firestore users/{uid}/usage/{date}]
+```
+
+### GDPR / POPI Data Rights Flow
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Settings as Settings Page
+    participant PS as PrivacyService
+    participant FS as Firestore
+    participant CF as Cloud Function
+
+    User->>Settings: Tap "Download my data"
+    Settings->>PS: requestDataExport()
+    PS->>FS: Create DataExportRequest (status: pending)
+    FS->>CF: Trigger export processing
+    CF->>CF: Aggregate user data from all collections
+    CF->>FS: Update request (status: ready, downloadUrl)
+    FS-->>User: Push notification: "Your data is ready"
+
+    User->>Settings: Tap "Delete my account"
+    Settings->>PS: requestDataDeletion()
+    PS->>FS: Create DataDeletionRequest (status: pending)
+    Note over PS: 30-day cooling period (POPI)
+    FS->>CF: Process after cooling period
+    CF->>FS: Delete all user data
+    CF->>CF: Sign out user
+```
+
+### Tier Comparison
+
+| Feature | Free | Pro (£4.99/mo) | Elite (£9.99/mo) |
+|---------|------|----------------|-------------------|
+| Projections | Top 5, no breakdown | All players, full breakdown | + AI insights |
+| Captain Picks | #1 only | Top 10 with reasoning | + custom models |
+| FDR | 2 weeks | 6 weeks | 10 weeks |
+| Form Tracker | 3 GWs | 10 GWs | 20 GWs |
+| Dream Team | View only | Save 10 teams | Unlimited |
+| Live Scores | 5 min delay | Real-time | Real-time |
+| Differentials | Top 3 | Full list | + ownership alerts |
+| Comparisons | 3/day | Unlimited | Unlimited |
+| Simulations | 2/day | Unlimited | Unlimited |
+| Watchlist | 5 players | 50 + price alerts | Unlimited |
+| F1 Data | Standings | Full race data | + telemetry dashboard |
+| AI Features | — | — | NL insights, league spy |
+| Ads | Yes | No | No |
+
+---
+
 ## Error Handling Standards
 
 | Error Type | HTTP Status | When |

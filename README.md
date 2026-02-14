@@ -245,6 +245,20 @@ cd functions && npm install && npm run deploy
 
 ## 📋 Changelog
 
+### v0.5.0 — Subscription Infrastructure & Compliance
+- 3-tier subscription system (Free / Pro £4.99/mo / Elite £9.99/mo) with feature flags
+- TierService + UsageTrackingService with Angular signals
+- Paywall component (premium design, monthly/yearly toggle, platform-aware)
+- Blurred content wrapper + usage badge components
+- Tier guards (proGuard, eliteGuard) + consent guard
+- Full privacy policy (POPI Act + GDPR compliant)
+- Full terms of service (NOT gambling disclaimer)
+- Consent collection page with version-tracked records
+- Settings: subscription management, privacy toggles, data export/deletion
+- Compliance documentation (Apple App Store, Google Play, POPI, GDPR)
+- Type system: `@types/subscription/` with 8 interfaces
+- 14 new features registered (F-037 → F-050)
+
 ### v0.4.0 — Data Pipeline & Caching
 - 19 Cloud Functions across 5 handler domains (football-data, FPL, API-Football, OpenF1, cache)
 - Full type system: 17 type files in `@types/` with barrel exports, zero `any` types
