@@ -58,6 +58,16 @@
 | F-048 | Terms of Service Page | Legal | ✅ Done | `pages/legal/terms.page.ts` | — | `docs/COMPLIANCE.md` |
 | F-049 | Consent Page | Legal | ✅ Done | `pages/legal/consent.page.ts` | — | `docs/COMPLIANCE.md` |
 | F-050 | Settings Subscription & Privacy | Subscription | ✅ Done | `pages/settings/settings.page.ts` | — | `docs/COMPLIANCE.md` |
+| F-051 | B2B API — NestJS Bootstrap | B2B API | ✅ Done | `nest-js-backend/src/main.ts` | — | `docs/B2B-API.md` |
+| F-052 | B2B API — API Key Auth Guard | B2B API | ✅ Done | `nest-js-backend/src/common/guards/api-key.guard.ts` | — | `docs/B2B-API.md` |
+| F-053 | B2B API — Auth Module (Key CRUD) | B2B API | ✅ Done | `nest-js-backend/src/modules/auth/` | — | `docs/B2B-API.md` |
+| F-054 | B2B API — Football Module | B2B API | ✅ Done | `nest-js-backend/src/modules/football/` | — | `docs/B2B-API.md` |
+| F-055 | B2B API — FPL Module | B2B API | ✅ Done | `nest-js-backend/src/modules/fpl/` | — | `docs/B2B-API.md` |
+| F-056 | B2B API — F1 Module | B2B API | ✅ Done | `nest-js-backend/src/modules/f1/` | — | `docs/B2B-API.md` |
+| F-057 | B2B API — Usage Tracking | B2B API | ✅ Done | `nest-js-backend/src/modules/usage/` | — | `docs/B2B-API.md` |
+| F-058 | B2B API — Swagger Documentation | B2B API | ✅ Done | `nest-js-backend/src/main.ts` | — | `docs/B2B-API.md` |
+| F-059 | B2B API — Response Wrapper | B2B API | ✅ Done | `nest-js-backend/src/common/interceptors/` | — | `docs/B2B-API.md` |
+| F-060 | B2B API — Dockerfile | B2B API | ✅ Done | `nest-js-backend/Dockerfile` | — | `docs/B2B-API.md` |
 
 ---
 

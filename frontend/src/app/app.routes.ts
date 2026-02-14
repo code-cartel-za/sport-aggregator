@@ -4,6 +4,10 @@ import { consentGuard } from './guards/consent.guard';
 
 export const routes: Routes = [
   {
+    path: 'api-docs',
+    loadComponent: () => import('./pages/api-docs/api-docs.page').then(m => m.ApiDocsPage),
+  },
+  {
     path: 'login',
     loadComponent: () => import('./pages/login/login.page').then(m => m.LoginPage),
     canActivate: [loginGuard],

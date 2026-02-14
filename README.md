@@ -148,6 +148,31 @@ users/{uid}/preferences  — User settings
 ## 📁 Project Structure
 
 ```
+├── frontend/                        # Angular/Ionic app
+├── functions/                       # Firebase Cloud Functions (data pipeline)
+├── nest-js-backend/                 # NestJS B2B API
+│   ├── src/
+│   │   ├── common/                  # Guards, filters, interceptors, decorators
+│   │   ├── config/                  # Firebase module
+│   │   ├── modules/
+│   │   │   ├── auth/                # API key management
+│   │   │   ├── football/            # Football data endpoints
+│   │   │   ├── fpl/                 # FPL data endpoints
+│   │   │   ├── f1/                  # F1 data endpoints
+│   │   │   ├── health/              # Health check
+│   │   │   └── usage/               # Usage tracking
+│   │   ├── types/                   # B2B type definitions
+│   │   ├── app.module.ts
+│   │   └── main.ts
+│   ├── Dockerfile
+│   └── package.json
+├── docs/                            # Documentation
+└── README.md
+```
+
+### Frontend Structure (`frontend/`)
+
+```
 src/
 ├── app/
 │   ├── guards/
@@ -244,6 +269,20 @@ cd functions && npm install && npm run deploy
 ---
 
 ## 📋 Changelog
+
+### v0.6.0 — B2B API
+- NestJS B2B API with full Swagger documentation
+- API key authentication with tier-based rate limiting (starter/growth/enterprise)
+- Football module: teams, players, fixtures, standings
+- FPL module: players with filtering/sorting, live gameweek, price changes, gameweeks
+- F1 module: standings, races, live positions, laps, pit stops
+- Auth module: API key CRUD with admin secret protection
+- Usage tracking per key per day with endpoint breakdown
+- Typed response DTOs for complete Swagger schema generation
+- Global exception filter with B2B error codes
+- B2B response wrapper (requestId, timestamp, rateLimit metadata)
+- Dockerfile for containerized deployment
+- API documentation (`docs/B2B-API.md`)
 
 ### v0.5.0 — Subscription Infrastructure & Compliance
 - 3-tier subscription system (Free / Pro £4.99/mo / Elite £9.99/mo) with feature flags
