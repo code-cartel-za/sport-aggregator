@@ -2,16 +2,17 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons, IonBadge, IonIcon,
+  IonSkeletonText, IonButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { trendingUp, trendingDown, remove } from 'ionicons/icons';
+import { trendingUp, trendingDown, remove, alertCircle, flashOutline } from 'ionicons/icons';
 import { FantasyProjectionService } from '../../services/fantasy-projection.service';
 import { Differential } from '../../models';
 
 @Component({
   selector: 'app-differentials',
   standalone: true,
-  imports: [CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons, IonBadge, IonIcon],
+  imports: [CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons, IonBadge, IonIcon, IonSkeletonText, IonButton],
   template: `
     <ion-header>
       <ion-toolbar>
@@ -21,44 +22,80 @@ import { Differential } from '../../models';
     </ion-header>
     <ion-content fullscreen>
       <div class="px-4 pt-3">
-        <div class="diff-info-banner">
-          <span class="diff-info-text">Players with &lt;25% ownership and high projected value</span>
-        </div>
+        @if (error()) {
+          <div class="error-state">
+            <ion-icon name="alert-circle" class="error-icon"></ion-icon>
+            <h3>Something went wrong</h3>
+            <p>{{ error() }}</p>
+            <ion-button fill="outline" size="small" (click)="loadData()">Try Again</ion-button>
+          </div>
+        } @else if (isLoading()) {
+          <div class="skeleton-card" style="margin-bottom: 12px">
+            <ion-skeleton-text [animated]="true" style="width: 80%; height: 12px; border-radius: 4px"></ion-skeleton-text>
+          </div>
+          @for (n of [1,2,3,4,5]; track n) {
+            <div class="skeleton-card">
+              <div style="display: flex; align-items: center; gap: 12px">
+                <ion-skeleton-text [animated]="true" style="width: 20px; height: 16px; border-radius: 4px"></ion-skeleton-text>
+                <div style="flex: 1">
+                  <ion-skeleton-text [animated]="true" style="width: 50%; height: 14px; border-radius: 4px"></ion-skeleton-text>
+                  <ion-skeleton-text [animated]="true" style="width: 35%; height: 10px; border-radius: 4px; margin-top: 4px"></ion-skeleton-text>
+                </div>
+                <ion-skeleton-text [animated]="true" style="width: 45px; height: 24px; border-radius: 4px"></ion-skeleton-text>
+              </div>
+              <div style="display: flex; gap: 8px; margin-top: 10px">
+                @for (m of [1,2,3]; track m) {
+                  <ion-skeleton-text [animated]="true" style="flex: 1; height: 36px; border-radius: 8px"></ion-skeleton-text>
+                }
+              </div>
+            </div>
+          }
+        } @else if (diffs().length === 0) {
+          <div class="empty-state">
+            <ion-icon name="flash-outline" class="empty-icon"></ion-icon>
+            <h3>No differentials</h3>
+            <p>Differential picks available after data sync</p>
+          </div>
+        } @else {
+          <div class="diff-info-banner">
+            <span class="diff-info-text">Players with &lt;25% ownership and high projected value</span>
+          </div>
 
-        @for (diff of diffs(); track diff.player.id; let i = $index) {
-          <div class="diff-card animate-fade-in" [style.animation-delay]="(i * 0.05) + 's'">
-            <div class="diff-header">
-              <div class="diff-rank">{{ i + 1 }}</div>
-              <div class="diff-player">
-                <div class="diff-name">{{ diff.player.name }}</div>
-                <div class="diff-meta">
-                  <ion-badge class="pos-badge" [class]="'pos-' + diff.player.position.toLowerCase()">{{ diff.player.position }}</ion-badge>
-                  {{ diff.player.teamShort }} · £{{ diff.player.price }}m
+          @for (diff of diffs(); track diff.player.id; let i = $index) {
+            <div class="diff-card animate-fade-in" [style.animation-delay]="(i * 0.05) + 's'">
+              <div class="diff-header">
+                <div class="diff-rank">{{ i + 1 }}</div>
+                <div class="diff-player">
+                  <div class="diff-name">{{ diff.player.name }}</div>
+                  <div class="diff-meta">
+                    <ion-badge class="pos-badge" [class]="'pos-' + diff.player.position.toLowerCase()">{{ diff.player.position }}</ion-badge>
+                    {{ diff.player.teamShort }} · £{{ diff.player.price }}m
+                  </div>
+                </div>
+                <div class="diff-value-col">
+                  <div class="diff-value">{{ diff.valueScore }}</div>
+                  <div class="diff-value-label">pts/£m</div>
                 </div>
               </div>
-              <div class="diff-value-col">
-                <div class="diff-value">{{ diff.valueScore }}</div>
-                <div class="diff-value-label">pts/£m</div>
+              <div class="diff-stats">
+                <div class="diff-stat">
+                  <span class="ds-label">Projected</span>
+                  <span class="ds-val gold">{{ diff.projectedPoints | number:'1.1-1' }} pts</span>
+                </div>
+                <div class="diff-stat">
+                  <span class="ds-label">Ownership</span>
+                  <span class="ds-val">{{ diff.player.ownership }}%</span>
+                </div>
+                <div class="diff-stat">
+                  <span class="ds-label">Trend</span>
+                  <span class="ds-val" [class]="'trend-' + diff.trend">
+                    <ion-icon [name]="diff.trend === 'rising' ? 'trending-up' : diff.trend === 'falling' ? 'trending-down' : 'remove'"></ion-icon>
+                    {{ diff.trend }}
+                  </span>
+                </div>
               </div>
             </div>
-            <div class="diff-stats">
-              <div class="diff-stat">
-                <span class="ds-label">Projected</span>
-                <span class="ds-val gold">{{ diff.projectedPoints | number:'1.1-1' }} pts</span>
-              </div>
-              <div class="diff-stat">
-                <span class="ds-label">Ownership</span>
-                <span class="ds-val">{{ diff.player.ownership }}%</span>
-              </div>
-              <div class="diff-stat">
-                <span class="ds-label">Trend</span>
-                <span class="ds-val" [class]="'trend-' + diff.trend">
-                  <ion-icon [name]="diff.trend === 'rising' ? 'trending-up' : diff.trend === 'falling' ? 'trending-down' : 'remove'"></ion-icon>
-                  {{ diff.trend }}
-                </span>
-              </div>
-            </div>
-          </div>
+          }
         }
       </div>
       <div class="bottom-spacer"></div>
@@ -96,10 +133,19 @@ import { Differential } from '../../models';
 export class DifferentialsPage implements OnInit {
   private projService = inject(FantasyProjectionService);
   diffs = signal<Differential[]>([]);
+  isLoading = signal(true);
+  error = signal<string | null>(null);
 
-  constructor() { addIcons({ trendingUp, trendingDown, remove }); }
+  constructor() { addIcons({ trendingUp, trendingDown, remove, alertCircle, flashOutline }); }
 
-  ngOnInit() {
-    this.projService.getDifferentials().subscribe(d => this.diffs.set(d));
+  ngOnInit() { this.loadData(); }
+
+  loadData() {
+    this.isLoading.set(true);
+    this.error.set(null);
+    this.projService.getDifferentials().subscribe({
+      next: (d) => { this.diffs.set(d); this.isLoading.set(false); },
+      error: (err) => { this.error.set(err?.message || 'Failed to load differentials'); this.isLoading.set(false); },
+    });
   }
 }

@@ -5,7 +5,7 @@ import {
   IonIcon, IonBadge, IonItemSliding, IonItem, IonItemOptions, IonItemOption, IonLabel, IonList,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { trash, trendingUp, trendingDown, remove } from 'ionicons/icons';
+import { trash, trendingUp, trendingDown, remove, eyeOutline } from 'ionicons/icons';
 import { WatchlistService } from '../../services/watchlist.service';
 import { WatchlistItem } from '../../models';
 
@@ -28,57 +28,53 @@ import { WatchlistItem } from '../../models';
       <div class="px-4 pt-3">
         @if (watchlistService.items().length === 0) {
           <div class="empty-state">
-            <div class="empty-icon">👀</div>
-            <div class="empty-text">No players on your watchlist</div>
-            <div class="empty-sub">Swipe left on any player to remove</div>
+            <ion-icon name="eye-outline" class="empty-icon"></ion-icon>
+            <h3>Your watchlist is empty</h3>
+            <p>Add players from other pages to track them here</p>
           </div>
-        }
-
-        <ion-list>
-          @for (item of watchlistService.items(); track item.playerId; let i = $index) {
-            <ion-item-sliding>
-              <ion-item lines="none" class="watch-item">
-                <div class="watch-card">
-                  <div class="watch-header">
-                    <div>
-                      <div class="watch-name">{{ item.playerName }}</div>
-                      <div class="watch-meta">
-                        <ion-badge class="pos-badge" [class]="'pos-' + item.position.toLowerCase()">{{ item.position }}</ion-badge>
-                        {{ item.team }}
+        } @else {
+          <ion-list>
+            @for (item of watchlistService.items(); track item.playerId; let i = $index) {
+              <ion-item-sliding>
+                <ion-item lines="none" class="watch-item">
+                  <div class="watch-card">
+                    <div class="watch-header">
+                      <div>
+                        <div class="watch-name">{{ item.playerName }}</div>
+                        <div class="watch-meta">
+                          <ion-badge class="pos-badge" [class]="'pos-' + item.position.toLowerCase()">{{ item.position }}</ion-badge>
+                          {{ item.team }}
+                        </div>
+                      </div>
+                      <div class="watch-price-col">
+                        <div class="watch-price">£{{ item.currentPrice }}m</div>
+                        <div class="watch-change" [class]="item.priceChange > 0 ? 'positive' : item.priceChange < 0 ? 'negative' : 'neutral'">
+                          <ion-icon [name]="item.priceChange > 0 ? 'trending-up' : item.priceChange < 0 ? 'trending-down' : 'remove'"></ion-icon>
+                          {{ item.priceChange > 0 ? '+' : '' }}{{ item.priceChange | number:'1.1-1' }}
+                        </div>
                       </div>
                     </div>
-                    <div class="watch-price-col">
-                      <div class="watch-price">£{{ item.currentPrice }}m</div>
-                      <div class="watch-change" [class]="item.priceChange > 0 ? 'positive' : item.priceChange < 0 ? 'negative' : 'neutral'">
-                        <ion-icon [name]="item.priceChange > 0 ? 'trending-up' : item.priceChange < 0 ? 'trending-down' : 'remove'"></ion-icon>
-                        {{ item.priceChange > 0 ? '+' : '' }}{{ item.priceChange | number:'1.1-1' }}
-                      </div>
-                    </div>
+                    @if (item.notes) {
+                      <div class="watch-notes">{{ item.notes }}</div>
+                    }
+                    <div class="watch-added">Added {{ item.addedDate }} · Was £{{ item.priceAtAdd }}m</div>
                   </div>
-                  @if (item.notes) {
-                    <div class="watch-notes">{{ item.notes }}</div>
-                  }
-                  <div class="watch-added">Added {{ item.addedDate }} · Was £{{ item.priceAtAdd }}m</div>
-                </div>
-              </ion-item>
-              <ion-item-options side="end">
-                <ion-item-option color="danger" (click)="removeItem(item.playerId)">
-                  <ion-icon name="trash" slot="icon-only"></ion-icon>
-                </ion-item-option>
-              </ion-item-options>
-            </ion-item-sliding>
-          }
-        </ion-list>
+                </ion-item>
+                <ion-item-options side="end">
+                  <ion-item-option color="danger" (click)="removeItem(item.playerId)">
+                    <ion-icon name="trash" slot="icon-only"></ion-icon>
+                  </ion-item-option>
+                </ion-item-options>
+              </ion-item-sliding>
+            }
+          </ion-list>
+        }
       </div>
       <div class="bottom-spacer"></div>
     </ion-content>
   `,
   styles: [`
     .page-title { font-family: 'Outfit', sans-serif; font-weight: 800; letter-spacing: 0.06em; font-size: 1rem; color: var(--accent-gold); }
-    .empty-state { text-align: center; padding: 60px 20px; }
-    .empty-icon { font-size: 48px; margin-bottom: 12px; }
-    .empty-text { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--text-primary); }
-    .empty-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
 
     .watch-item { --background: transparent; --padding-start: 0; --inner-padding-end: 0; margin-bottom: 8px; }
     .watch-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; width: 100%; }
@@ -104,7 +100,7 @@ import { WatchlistItem } from '../../models';
 export class WatchlistPage {
   watchlistService = inject(WatchlistService);
 
-  constructor() { addIcons({ trash, trendingUp, trendingDown, remove }); }
+  constructor() { addIcons({ trash, trendingUp, trendingDown, remove, eyeOutline }); }
 
   removeItem(playerId: number) {
     this.watchlistService.remove(playerId);

@@ -2,10 +2,10 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons,
-  IonSegment, IonSegmentButton, IonLabel, IonIcon, IonBadge,
+  IonSegment, IonSegmentButton, IonLabel, IonIcon, IonBadge, IonSkeletonText, IonButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { trendingUp, trendingDown, remove } from 'ionicons/icons';
+import { trendingUp, trendingDown, remove, alertCircle, pulseOutline } from 'ionicons/icons';
 import { FantasyProjectionService } from '../../services/fantasy-projection.service';
 import { FantasyPlayer, FplPosition } from '../../models';
 
@@ -15,7 +15,7 @@ import { FantasyPlayer, FplPosition } from '../../models';
   imports: [
     CommonModule,
     IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons,
-    IonSegment, IonSegmentButton, IonLabel, IonIcon, IonBadge,
+    IonSegment, IonSegmentButton, IonLabel, IonIcon, IonBadge, IonSkeletonText, IonButton,
   ],
   template: `
     <ion-header>
@@ -36,40 +36,72 @@ import { FantasyPlayer, FplPosition } from '../../models';
       </div>
 
       <div class="px-4 pt-3">
-        @for (player of filteredPlayers(); track player.id; let i = $index) {
-          <div class="form-card animate-fade-in" [style.animation-delay]="(i * 0.04) + 's'">
-            <div class="form-header">
-              <div class="form-player">
-                <span class="form-name">{{ player.name }}</span>
-                <span class="form-meta">
-                  <ion-badge class="pos-badge" [class]="'pos-' + player.position.toLowerCase()">{{ player.position }}</ion-badge>
-                  {{ player.teamShort }}
-                </span>
-              </div>
-              <div class="form-score-col">
-                <div class="form-score">{{ player.form }}</div>
-                <ion-icon [name]="getTrendIcon(player)" [class]="getTrendClass(player)" class="trend-icon"></ion-icon>
-              </div>
-            </div>
-
-            <!-- Sparkline -->
-            <div class="sparkline-container">
-              <div class="sparkline">
-                @for (pt of player.last10; track $index; let j = $index) {
-                  <div class="spark-bar-wrap">
-                    <div class="spark-bar" [style.height.%]="(pt / getMaxPts(player)) * 100" [class]="getBarClass(pt)">
-                    </div>
-                    <span class="spark-val">{{ pt }}</span>
-                  </div>
-                }
-              </div>
-              <div class="sparkline-labels">
-                @for (pt of player.last10; track $index; let j = $index) {
-                  <span class="spark-gw">{{ 13 + j }}</span>
-                }
-              </div>
-            </div>
+        @if (error()) {
+          <div class="error-state">
+            <ion-icon name="alert-circle" class="error-icon"></ion-icon>
+            <h3>Something went wrong</h3>
+            <p>{{ error() }}</p>
+            <ion-button fill="outline" size="small" (click)="loadData()">Try Again</ion-button>
           </div>
+        } @else if (isLoading()) {
+          @for (n of [1,2,3,4,5]; track n) {
+            <div class="skeleton-card">
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <div>
+                  <ion-skeleton-text [animated]="true" style="width: 120px; height: 14px; border-radius: 4px"></ion-skeleton-text>
+                  <ion-skeleton-text [animated]="true" style="width: 80px; height: 10px; border-radius: 4px; margin-top: 4px"></ion-skeleton-text>
+                </div>
+                <ion-skeleton-text [animated]="true" style="width: 40px; height: 20px; border-radius: 4px"></ion-skeleton-text>
+              </div>
+              <div style="display: flex; gap: 3px; margin-top: 12px; height: 50px; align-items: flex-end">
+                @for (m of [1,2,3,4,5,6,7,8,9,10]; track m) {
+                  <ion-skeleton-text [animated]="true" [style.height.%]="20 + m * 7" style="flex: 1; border-radius: 3px 3px 0 0"></ion-skeleton-text>
+                }
+              </div>
+            </div>
+          }
+        } @else if (filteredPlayers().length === 0) {
+          <div class="empty-state">
+            <ion-icon name="pulse-outline" class="empty-icon"></ion-icon>
+            <h3>No form data</h3>
+            <p>Form data requires synced FPL data</p>
+          </div>
+        } @else {
+          @for (player of filteredPlayers(); track player.id; let i = $index) {
+            <div class="form-card animate-fade-in" [style.animation-delay]="(i * 0.04) + 's'">
+              <div class="form-header">
+                <div class="form-player">
+                  <span class="form-name">{{ player.name }}</span>
+                  <span class="form-meta">
+                    <ion-badge class="pos-badge" [class]="'pos-' + player.position.toLowerCase()">{{ player.position }}</ion-badge>
+                    {{ player.teamShort }}
+                  </span>
+                </div>
+                <div class="form-score-col">
+                  <div class="form-score">{{ player.form }}</div>
+                  <ion-icon [name]="getTrendIcon(player)" [class]="getTrendClass(player)" class="trend-icon"></ion-icon>
+                </div>
+              </div>
+
+              <!-- Sparkline -->
+              <div class="sparkline-container">
+                <div class="sparkline">
+                  @for (pt of player.last10; track $index; let j = $index) {
+                    <div class="spark-bar-wrap">
+                      <div class="spark-bar" [style.height.%]="(pt / getMaxPts(player)) * 100" [class]="getBarClass(pt)">
+                      </div>
+                      <span class="spark-val">{{ pt }}</span>
+                    </div>
+                  }
+                </div>
+                <div class="sparkline-labels">
+                  @for (pt of player.last10; track $index; let j = $index) {
+                    <span class="spark-gw">{{ 13 + j }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+          }
         }
       </div>
       <div class="bottom-spacer"></div>
@@ -110,11 +142,20 @@ export class FormTrackerPage implements OnInit {
   private projService = inject(FantasyProjectionService);
   players = signal<FantasyPlayer[]>([]);
   filter = signal<string>('ALL');
+  isLoading = signal(true);
+  error = signal<string | null>(null);
 
-  constructor() { addIcons({ trendingUp, trendingDown, remove }); }
+  constructor() { addIcons({ trendingUp, trendingDown, remove, alertCircle, pulseOutline }); }
 
-  ngOnInit() {
-    this.projService.getPlayers().subscribe(p => this.players.set(p.sort((a, b) => b.form - a.form)));
+  ngOnInit() { this.loadData(); }
+
+  loadData() {
+    this.isLoading.set(true);
+    this.error.set(null);
+    this.projService.getPlayers().subscribe({
+      next: (p) => { this.players.set(p.sort((a, b) => b.form - a.form)); this.isLoading.set(false); },
+      error: (err) => { this.error.set(err?.message || 'Failed to load form data'); this.isLoading.set(false); },
+    });
   }
 
   filteredPlayers(): FantasyPlayer[] {

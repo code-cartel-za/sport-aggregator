@@ -2,14 +2,17 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons,
+  IonSkeletonText, IonButton, IonIcon,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { alertCircle, gridOutline } from 'ionicons/icons';
 import { FDRService } from '../../services/fdr.service';
 import { FDRRating } from '../../models';
 
 @Component({
   selector: 'app-fdr',
   standalone: true,
-  imports: [CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons],
+  imports: [CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons, IonSkeletonText, IonButton, IonIcon],
   template: `
     <ion-header>
       <ion-toolbar>
@@ -19,34 +22,72 @@ import { FDRRating } from '../../models';
     </ion-header>
     <ion-content fullscreen>
       <div class="px-4 pt-3">
-        <div class="fdr-legend">
-          <span class="legend-item"><span class="legend-dot fdr-1"></span>Very Easy</span>
-          <span class="legend-item"><span class="legend-dot fdr-2"></span>Easy</span>
-          <span class="legend-item"><span class="legend-dot fdr-3"></span>Medium</span>
-          <span class="legend-item"><span class="legend-dot fdr-4"></span>Hard</span>
-          <span class="legend-item"><span class="legend-dot fdr-5"></span>Very Hard</span>
-        </div>
-
-        <!-- GW Headers -->
-        <div class="fdr-header-row">
-          <div class="fdr-team-col">TEAM</div>
-          @for (gw of gwHeaders(); track gw) {
-            <div class="fdr-gw-col">GW{{ gw }}</div>
-          }
-        </div>
-
-        @for (rating of ratings(); track rating.teamId) {
-          <div class="fdr-row animate-fade-in">
-            <div class="fdr-team-col">
-              <span class="fdr-team-name">{{ rating.teamShort }}</span>
-            </div>
-            @for (fix of rating.fixtures; track fix.gameweek) {
-              <div class="fdr-cell" [class]="'fdr-cell-' + fix.difficulty">
-                <span class="fdr-opp">{{ fix.opponentShort }}</span>
-                <span class="fdr-ha">{{ fix.isHome ? 'H' : 'A' }}</span>
-              </div>
+        @if (error()) {
+          <div class="error-state">
+            <ion-icon name="alert-circle" class="error-icon"></ion-icon>
+            <h3>Something went wrong</h3>
+            <p>{{ error() }}</p>
+            <ion-button fill="outline" size="small" (click)="loadData()">Try Again</ion-button>
+          </div>
+        } @else if (isLoading()) {
+          <!-- Legend skeleton -->
+          <div style="display: flex; gap: 10px; margin-bottom: 16px">
+            @for (n of [1,2,3,4,5]; track n) {
+              <ion-skeleton-text [animated]="true" style="width: 60px; height: 12px; border-radius: 4px"></ion-skeleton-text>
             }
           </div>
+          <!-- Header skeleton -->
+          <div style="display: flex; gap: 4px; margin-bottom: 4px">
+            <ion-skeleton-text [animated]="true" style="width: 48px; height: 12px; border-radius: 4px"></ion-skeleton-text>
+            @for (n of [1,2,3,4,5,6]; track n) {
+              <ion-skeleton-text [animated]="true" style="flex: 1; height: 12px; border-radius: 4px"></ion-skeleton-text>
+            }
+          </div>
+          <!-- Row skeletons -->
+          @for (n of [1,2,3,4,5,6,7,8]; track n) {
+            <div style="display: flex; gap: 4px; margin-bottom: 3px">
+              <ion-skeleton-text [animated]="true" style="width: 48px; height: 38px; border-radius: 4px"></ion-skeleton-text>
+              @for (m of [1,2,3,4,5,6]; track m) {
+                <ion-skeleton-text [animated]="true" style="flex: 1; height: 38px; border-radius: 6px"></ion-skeleton-text>
+              }
+            </div>
+          }
+        } @else if (ratings().length === 0) {
+          <div class="empty-state">
+            <ion-icon name="grid-outline" class="empty-icon"></ion-icon>
+            <h3>No FDR data</h3>
+            <p>FDR data not available yet</p>
+          </div>
+        } @else {
+          <div class="fdr-legend">
+            <span class="legend-item"><span class="legend-dot fdr-1"></span>Very Easy</span>
+            <span class="legend-item"><span class="legend-dot fdr-2"></span>Easy</span>
+            <span class="legend-item"><span class="legend-dot fdr-3"></span>Medium</span>
+            <span class="legend-item"><span class="legend-dot fdr-4"></span>Hard</span>
+            <span class="legend-item"><span class="legend-dot fdr-5"></span>Very Hard</span>
+          </div>
+
+          <!-- GW Headers -->
+          <div class="fdr-header-row">
+            <div class="fdr-team-col">TEAM</div>
+            @for (gw of gwHeaders(); track gw) {
+              <div class="fdr-gw-col">GW{{ gw }}</div>
+            }
+          </div>
+
+          @for (rating of ratings(); track rating.teamId) {
+            <div class="fdr-row animate-fade-in">
+              <div class="fdr-team-col">
+                <span class="fdr-team-name">{{ rating.teamShort }}</span>
+              </div>
+              @for (fix of rating.fixtures; track fix.gameweek) {
+                <div class="fdr-cell" [class]="'fdr-cell-' + fix.difficulty">
+                  <span class="fdr-opp">{{ fix.opponentShort }}</span>
+                  <span class="fdr-ha">{{ fix.isHome ? 'H' : 'A' }}</span>
+                </div>
+              }
+            </div>
+          }
         }
       </div>
       <div class="bottom-spacer"></div>
@@ -84,13 +125,28 @@ export class FDRPage implements OnInit {
   private fdrService = inject(FDRService);
   ratings = signal<FDRRating[]>([]);
   gwHeaders = signal<number[]>([]);
+  isLoading = signal(true);
+  error = signal<string | null>(null);
 
-  ngOnInit() {
-    this.fdrService.getFDRRatings().subscribe(r => {
-      this.ratings.set(r);
-      if (r.length > 0) {
-        this.gwHeaders.set(r[0].fixtures.map(f => f.gameweek));
-      }
+  constructor() { addIcons({ alertCircle, gridOutline }); }
+
+  ngOnInit() { this.loadData(); }
+
+  loadData() {
+    this.isLoading.set(true);
+    this.error.set(null);
+    this.fdrService.getFDRRatings().subscribe({
+      next: (r) => {
+        this.ratings.set(r);
+        if (r.length > 0) {
+          this.gwHeaders.set(r[0].fixtures.map(f => f.gameweek));
+        }
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.error.set(err?.message || 'Failed to load FDR data');
+        this.isLoading.set(false);
+      },
     });
   }
 }

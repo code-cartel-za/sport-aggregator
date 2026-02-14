@@ -2,17 +2,17 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons,
-  IonIcon, IonBadge,
+  IonIcon, IonBadge, IonSkeletonText, IonButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { trendingUp, trendingDown, alertCircle, time } from 'ionicons/icons';
+import { trendingUp, trendingDown, alertCircle, time, newspaperOutline } from 'ionicons/icons';
 import { FantasyProjectionService } from '../../services/fantasy-projection.service';
 import { GameweekSummary } from '../../models';
 
 @Component({
   selector: 'app-digest',
   standalone: true,
-  imports: [CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons, IonIcon, IonBadge],
+  imports: [CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons, IonIcon, IonBadge, IonSkeletonText, IonButton],
   template: `
     <ion-header>
       <ion-toolbar>
@@ -21,8 +21,44 @@ import { GameweekSummary } from '../../models';
       </ion-toolbar>
     </ion-header>
     <ion-content fullscreen>
-      @if (summary()) {
-        <div class="px-4 pt-3">
+      <div class="px-4 pt-3">
+        @if (error()) {
+          <div class="error-state">
+            <ion-icon name="alert-circle" class="error-icon"></ion-icon>
+            <h3>Something went wrong</h3>
+            <p>{{ error() }}</p>
+            <ion-button fill="outline" size="small" (click)="loadData()">Try Again</ion-button>
+          </div>
+        } @else if (isLoading()) {
+          <!-- Deadline skeleton -->
+          <div class="skeleton-card" style="display: flex; align-items: center; gap: 14px">
+            <ion-skeleton-text [animated]="true" style="width: 28px; height: 28px; border-radius: 6px"></ion-skeleton-text>
+            <div style="flex: 1">
+              <ion-skeleton-text [animated]="true" style="width: 40%; height: 10px; border-radius: 4px"></ion-skeleton-text>
+              <ion-skeleton-text [animated]="true" style="width: 60%; height: 20px; border-radius: 4px; margin-top: 6px"></ion-skeleton-text>
+            </div>
+          </div>
+          <!-- Section skeletons -->
+          @for (section of [1,2,3]; track section) {
+            <div style="display: flex; align-items: center; gap: 12px; margin: 20px 0 10px">
+              <ion-skeleton-text [animated]="true" style="width: 80px; height: 10px; border-radius: 4px"></ion-skeleton-text>
+              <ion-skeleton-text [animated]="true" style="flex: 1; height: 1px"></ion-skeleton-text>
+            </div>
+            @for (n of [1,2,3]; track n) {
+              <div class="skeleton-card" style="display: flex; gap: 10px; align-items: center">
+                <ion-skeleton-text [animated]="true" style="width: 18px; height: 14px; border-radius: 4px"></ion-skeleton-text>
+                <ion-skeleton-text [animated]="true" style="flex: 1; height: 14px; border-radius: 4px"></ion-skeleton-text>
+                <ion-skeleton-text [animated]="true" style="width: 50px; height: 14px; border-radius: 4px"></ion-skeleton-text>
+              </div>
+            }
+          }
+        } @else if (!summary()) {
+          <div class="empty-state">
+            <ion-icon name="newspaper-outline" class="empty-icon"></ion-icon>
+            <h3>No digest available</h3>
+            <p>Gameweek digest available after data sync</p>
+          </div>
+        } @else {
           <!-- Deadline -->
           <div class="deadline-card gold-border-card animate-fade-in">
             <div class="dc-icon">⏰</div>
@@ -103,8 +139,8 @@ import { GameweekSummary } from '../../models';
               <span class="fdr-dot" [class]="'fdr-' + f.fdr"></span>
             </div>
           }
-        </div>
-      }
+        }
+      </div>
       <div class="bottom-spacer"></div>
     </ion-content>
   `,
@@ -157,14 +193,27 @@ export class DigestPage implements OnInit {
   private projService = inject(FantasyProjectionService);
   summary = signal<GameweekSummary | null>(null);
   countdownText = signal('--:--:--');
+  isLoading = signal(true);
+  error = signal<string | null>(null);
 
-  constructor() { addIcons({ trendingUp, trendingDown, alertCircle, time }); }
+  constructor() { addIcons({ trendingUp, trendingDown, alertCircle, time, newspaperOutline }); }
 
-  ngOnInit() {
-    this.projService.getGameweekSummary().subscribe(s => {
-      this.summary.set(s);
-      this.updateCountdown(s.deadline);
-      setInterval(() => this.updateCountdown(s.deadline), 1000);
+  ngOnInit() { this.loadData(); }
+
+  loadData() {
+    this.isLoading.set(true);
+    this.error.set(null);
+    this.projService.getGameweekSummary().subscribe({
+      next: (s) => {
+        this.summary.set(s);
+        this.updateCountdown(s.deadline);
+        setInterval(() => this.updateCountdown(s.deadline), 1000);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.error.set(err?.message || 'Failed to load digest');
+        this.isLoading.set(false);
+      },
     });
   }
 
