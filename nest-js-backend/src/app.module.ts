@@ -7,6 +7,7 @@ import { FplModule } from './modules/fpl/fpl.module';
 import { F1Module } from './modules/f1/f1.module';
 import { HealthModule } from './modules/health/health.module';
 import { UsageModule } from './modules/usage/usage.module';
+import { IngestionModule } from './modules/ingestion/ingestion.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { UsageModule } from './modules/usage/usage.module';
     F1Module,
     HealthModule,
     UsageModule,
+    IngestionModule,
   ],
 })
 export class AppModule {}
