@@ -2,12 +2,13 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons,
-  IonSegment, IonSegmentButton, IonLabel, IonIcon, IonBadge,
+  IonSegment, IonSegmentButton, IonLabel, IonIcon, IonBadge, IonSkeletonText, IonButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { football, speedometer, arrowUp, arrowDown } from 'ionicons/icons';
+import { football, speedometer, arrowUp, arrowDown, alertCircle, analyticsOutline } from 'ionicons/icons';
 import { FantasyProjectionService } from '../../services/fantasy-projection.service';
 import { FantasyProjection, F1FantasyProjection } from '../../models';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-projections',
@@ -15,7 +16,7 @@ import { FantasyProjection, F1FantasyProjection } from '../../models';
   imports: [
     CommonModule,
     IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons,
-    IonSegment, IonSegmentButton, IonLabel, IonIcon, IonBadge,
+    IonSegment, IonSegmentButton, IonLabel, IonIcon, IonBadge, IonSkeletonText, IonButton,
   ],
   template: `
     <ion-header>
@@ -32,73 +33,123 @@ import { FantasyProjection, F1FantasyProjection } from '../../models';
         </ion-segment>
       </div>
 
-      @if (mode() === 'fpl') {
+      @if (error()) {
         <div class="px-4 pt-3">
-          @for (proj of fplProjections(); track proj.playerId; let i = $index) {
-            <div class="proj-card animate-fade-in" [style.animation-delay]="(i * 0.04) + 's'">
-              <div class="proj-header">
-                <div class="proj-rank">{{ i + 1 }}</div>
-                <div class="proj-info">
-                  <div class="proj-name">{{ proj.playerName }}</div>
-                  <div class="proj-meta">
-                    <ion-badge class="pos-badge" [class]="'pos-' + proj.position.toLowerCase()">{{ proj.position }}</ion-badge>
-                    <span class="proj-team">{{ proj.team }}</span>
-                  </div>
+          <div class="error-state">
+            <ion-icon name="alert-circle" class="error-icon"></ion-icon>
+            <h3>Something went wrong</h3>
+            <p>{{ error() }}</p>
+            <ion-button fill="outline" size="small" (click)="loadData()">Try Again</ion-button>
+          </div>
+        </div>
+      } @else if (isLoading()) {
+        <div class="px-4 pt-3">
+          @for (n of [1,2,3,4,5]; track n) {
+            <div class="skeleton-card">
+              <div style="display: flex; align-items: center; gap: 12px">
+                <ion-skeleton-text [animated]="true" style="width: 20px; height: 16px; border-radius: 4px"></ion-skeleton-text>
+                <div style="flex: 1">
+                  <ion-skeleton-text [animated]="true" style="width: 50%; height: 14px; border-radius: 4px"></ion-skeleton-text>
+                  <ion-skeleton-text [animated]="true" style="width: 30%; height: 10px; border-radius: 4px; margin-top: 4px"></ion-skeleton-text>
                 </div>
-                <div class="proj-points-col">
-                  <div class="proj-points">{{ proj.projectedPoints }}</div>
-                  <div class="proj-pts-label">pts</div>
-                </div>
+                <ion-skeleton-text [animated]="true" style="width: 50px; height: 24px; border-radius: 4px"></ion-skeleton-text>
               </div>
-              <div class="confidence-row">
-                <span class="conf-label">Confidence</span>
-                <div class="conf-bar-bg"><div class="conf-bar" [style.width.%]="proj.confidence" [class]="getConfClass(proj.confidence)"></div></div>
-                <span class="conf-pct">{{ proj.confidence }}%</span>
-              </div>
-              <div class="breakdown-grid">
-                <div class="bd-item" *ngIf="proj.breakdown.goals > 0"><span class="bd-label">Goals</span><span class="bd-val positive">+{{ proj.breakdown.goals }}</span></div>
-                <div class="bd-item" *ngIf="proj.breakdown.assists > 0"><span class="bd-label">Assists</span><span class="bd-val positive">+{{ proj.breakdown.assists }}</span></div>
-                <div class="bd-item" *ngIf="proj.breakdown.cleanSheet > 0"><span class="bd-label">CS</span><span class="bd-val positive">+{{ proj.breakdown.cleanSheet }}</span></div>
-                <div class="bd-item"><span class="bd-label">Minutes</span><span class="bd-val">+{{ proj.breakdown.minutes }}</span></div>
-                <div class="bd-item" *ngIf="proj.breakdown.bonus > 0"><span class="bd-label">Bonus</span><span class="bd-val positive">+{{ proj.breakdown.bonus }}</span></div>
-                <div class="bd-item" *ngIf="proj.breakdown.saves > 0"><span class="bd-label">Saves</span><span class="bd-val positive">+{{ proj.breakdown.saves }}</span></div>
-                <div class="bd-item" *ngIf="proj.breakdown.yellowCards < 0"><span class="bd-label">YC</span><span class="bd-val negative">{{ proj.breakdown.yellowCards }}</span></div>
+              <ion-skeleton-text [animated]="true" style="width: 100%; height: 4px; border-radius: 2px; margin-top: 10px"></ion-skeleton-text>
+              <div style="display: flex; gap: 6px; margin-top: 10px">
+                <ion-skeleton-text [animated]="true" style="width: 50px; height: 22px; border-radius: 6px"></ion-skeleton-text>
+                <ion-skeleton-text [animated]="true" style="width: 50px; height: 22px; border-radius: 6px"></ion-skeleton-text>
+                <ion-skeleton-text [animated]="true" style="width: 50px; height: 22px; border-radius: 6px"></ion-skeleton-text>
               </div>
             </div>
+          }
+        </div>
+      } @else {
+
+      @if (mode() === 'fpl') {
+        <div class="px-4 pt-3">
+          @if (fplProjections().length === 0) {
+            <div class="empty-state">
+              <ion-icon name="analytics-outline" class="empty-icon"></ion-icon>
+              <h3>No FPL projections</h3>
+              <p>Run a sync to populate projections</p>
+            </div>
+          } @else {
+            @for (proj of fplProjections(); track proj.playerId; let i = $index) {
+              <div class="proj-card animate-fade-in" [style.animation-delay]="(i * 0.04) + 's'">
+                <div class="proj-header">
+                  <div class="proj-rank">{{ i + 1 }}</div>
+                  <div class="proj-info">
+                    <div class="proj-name">{{ proj.playerName }}</div>
+                    <div class="proj-meta">
+                      <ion-badge class="pos-badge" [class]="'pos-' + proj.position.toLowerCase()">{{ proj.position }}</ion-badge>
+                      <span class="proj-team">{{ proj.team }}</span>
+                    </div>
+                  </div>
+                  <div class="proj-points-col">
+                    <div class="proj-points">{{ proj.projectedPoints }}</div>
+                    <div class="proj-pts-label">pts</div>
+                  </div>
+                </div>
+                <div class="confidence-row">
+                  <span class="conf-label">Confidence</span>
+                  <div class="conf-bar-bg"><div class="conf-bar" [style.width.%]="proj.confidence" [class]="getConfClass(proj.confidence)"></div></div>
+                  <span class="conf-pct">{{ proj.confidence }}%</span>
+                </div>
+                <div class="breakdown-grid">
+                  <div class="bd-item" *ngIf="proj.breakdown.goals > 0"><span class="bd-label">Goals</span><span class="bd-val positive">+{{ proj.breakdown.goals }}</span></div>
+                  <div class="bd-item" *ngIf="proj.breakdown.assists > 0"><span class="bd-label">Assists</span><span class="bd-val positive">+{{ proj.breakdown.assists }}</span></div>
+                  <div class="bd-item" *ngIf="proj.breakdown.cleanSheet > 0"><span class="bd-label">CS</span><span class="bd-val positive">+{{ proj.breakdown.cleanSheet }}</span></div>
+                  <div class="bd-item"><span class="bd-label">Minutes</span><span class="bd-val">+{{ proj.breakdown.minutes }}</span></div>
+                  <div class="bd-item" *ngIf="proj.breakdown.bonus > 0"><span class="bd-label">Bonus</span><span class="bd-val positive">+{{ proj.breakdown.bonus }}</span></div>
+                  <div class="bd-item" *ngIf="proj.breakdown.saves > 0"><span class="bd-label">Saves</span><span class="bd-val positive">+{{ proj.breakdown.saves }}</span></div>
+                  <div class="bd-item" *ngIf="proj.breakdown.yellowCards < 0"><span class="bd-label">YC</span><span class="bd-val negative">{{ proj.breakdown.yellowCards }}</span></div>
+                </div>
+              </div>
+            }
           }
         </div>
       }
 
       @if (mode() === 'f1') {
         <div class="px-4 pt-3">
-          @for (proj of f1Projections(); track proj.driverId; let i = $index) {
-            <div class="proj-card animate-fade-in" [style.animation-delay]="(i * 0.04) + 's'">
-              <div class="proj-header">
-                <div class="proj-rank">{{ i + 1 }}</div>
-                <div class="proj-info">
-                  <div class="proj-name">{{ proj.driverName }}</div>
-                  <div class="proj-meta"><span class="proj-team">{{ proj.team }}</span></div>
-                </div>
-                <div class="proj-points-col">
-                  <div class="proj-points">{{ proj.projectedPoints }}</div>
-                  <div class="proj-pts-label">pts</div>
-                </div>
-              </div>
-              <div class="confidence-row">
-                <span class="conf-label">Confidence</span>
-                <div class="conf-bar-bg"><div class="conf-bar" [style.width.%]="proj.confidence" [class]="getConfClass(proj.confidence)"></div></div>
-                <span class="conf-pct">{{ proj.confidence }}%</span>
-              </div>
-              <div class="breakdown-grid">
-                <div class="bd-item"><span class="bd-label">Race</span><span class="bd-val positive">+{{ proj.breakdown.racePosition }}</span></div>
-                <div class="bd-item" *ngIf="proj.breakdown.qualifyingBonus > 0"><span class="bd-label">Quali</span><span class="bd-val positive">+{{ proj.breakdown.qualifyingBonus }}</span></div>
-                <div class="bd-item" *ngIf="proj.breakdown.beatTeammate > 0"><span class="bd-label">Beat TM</span><span class="bd-val positive">+{{ proj.breakdown.beatTeammate }}</span></div>
-                <div class="bd-item" *ngIf="proj.breakdown.positionsGained > 0"><span class="bd-label">Pos Gain</span><span class="bd-val positive">+{{ proj.breakdown.positionsGained }}</span></div>
-                <div class="bd-item" *ngIf="proj.breakdown.dnfPenalty < 0"><span class="bd-label">DNF Risk</span><span class="bd-val negative">{{ proj.breakdown.dnfPenalty }}</span></div>
-              </div>
+          @if (f1Projections().length === 0) {
+            <div class="empty-state">
+              <ion-icon name="analytics-outline" class="empty-icon"></ion-icon>
+              <h3>No F1 projections</h3>
+              <p>Run a sync to populate F1 projections</p>
             </div>
+          } @else {
+            @for (proj of f1Projections(); track proj.driverId; let i = $index) {
+              <div class="proj-card animate-fade-in" [style.animation-delay]="(i * 0.04) + 's'">
+                <div class="proj-header">
+                  <div class="proj-rank">{{ i + 1 }}</div>
+                  <div class="proj-info">
+                    <div class="proj-name">{{ proj.driverName }}</div>
+                    <div class="proj-meta"><span class="proj-team">{{ proj.team }}</span></div>
+                  </div>
+                  <div class="proj-points-col">
+                    <div class="proj-points">{{ proj.projectedPoints }}</div>
+                    <div class="proj-pts-label">pts</div>
+                  </div>
+                </div>
+                <div class="confidence-row">
+                  <span class="conf-label">Confidence</span>
+                  <div class="conf-bar-bg"><div class="conf-bar" [style.width.%]="proj.confidence" [class]="getConfClass(proj.confidence)"></div></div>
+                  <span class="conf-pct">{{ proj.confidence }}%</span>
+                </div>
+                <div class="breakdown-grid">
+                  <div class="bd-item"><span class="bd-label">Race</span><span class="bd-val positive">+{{ proj.breakdown.racePosition }}</span></div>
+                  <div class="bd-item" *ngIf="proj.breakdown.qualifyingBonus > 0"><span class="bd-label">Quali</span><span class="bd-val positive">+{{ proj.breakdown.qualifyingBonus }}</span></div>
+                  <div class="bd-item" *ngIf="proj.breakdown.beatTeammate > 0"><span class="bd-label">Beat TM</span><span class="bd-val positive">+{{ proj.breakdown.beatTeammate }}</span></div>
+                  <div class="bd-item" *ngIf="proj.breakdown.positionsGained > 0"><span class="bd-label">Pos Gain</span><span class="bd-val positive">+{{ proj.breakdown.positionsGained }}</span></div>
+                  <div class="bd-item" *ngIf="proj.breakdown.dnfPenalty < 0"><span class="bd-label">DNF Risk</span><span class="bd-val negative">{{ proj.breakdown.dnfPenalty }}</span></div>
+                </div>
+              </div>
+            }
           }
         </div>
+      }
+
       }
       <div class="bottom-spacer"></div>
     </ion-content>
@@ -143,12 +194,30 @@ export class ProjectionsPage implements OnInit {
   mode = signal('fpl');
   fplProjections = signal<FantasyProjection[]>([]);
   f1Projections = signal<F1FantasyProjection[]>([]);
+  isLoading = signal(true);
+  error = signal<string | null>(null);
 
-  constructor() { addIcons({ football, speedometer, arrowUp, arrowDown }); }
+  constructor() { addIcons({ football, speedometer, arrowUp, arrowDown, alertCircle, analyticsOutline }); }
 
-  ngOnInit() {
-    this.projService.getProjections().subscribe(p => this.fplProjections.set(p.sort((a, b) => b.projectedPoints - a.projectedPoints)));
-    this.projService.getF1Projections().subscribe(p => this.f1Projections.set(p.sort((a, b) => b.projectedPoints - a.projectedPoints)));
+  ngOnInit() { this.loadData(); }
+
+  loadData() {
+    this.isLoading.set(true);
+    this.error.set(null);
+    forkJoin({
+      fpl: this.projService.getProjections(),
+      f1: this.projService.getF1Projections(),
+    }).subscribe({
+      next: (data) => {
+        this.fplProjections.set(data.fpl.sort((a, b) => b.projectedPoints - a.projectedPoints));
+        this.f1Projections.set(data.f1.sort((a, b) => b.projectedPoints - a.projectedPoints));
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.error.set(err?.message || 'Failed to load projections');
+        this.isLoading.set(false);
+      },
+    });
   }
 
   getConfClass(confidence: number): string {

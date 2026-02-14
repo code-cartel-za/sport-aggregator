@@ -3,12 +3,13 @@ import { CommonModule, DatePipe } from '@angular/common';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonCard, IonCardContent,
   IonSegment, IonSegmentButton, IonLabel, IonBadge, IonIcon, IonChip,
-  IonRefresher, IonRefresherContent, IonList, IonItem,
+  IonRefresher, IonRefresherContent, IonList, IonItem, IonSkeletonText, IonButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { football, trophy, calendar, list } from 'ionicons/icons';
+import { football, trophy, calendar, list, alertCircle, footballOutline, ribbonOutline } from 'ionicons/icons';
 import { FootballApiService } from '../../services/football-api.service';
 import { Fixture, League, Standing } from '../../models';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-football',
@@ -17,7 +18,7 @@ import { Fixture, League, Standing } from '../../models';
     CommonModule, DatePipe,
     IonContent, IonHeader, IonToolbar, IonTitle, IonCard, IonCardContent,
     IonSegment, IonSegmentButton, IonLabel, IonBadge, IonIcon, IonChip,
-    IonRefresher, IonRefresherContent, IonList, IonItem,
+    IonRefresher, IonRefresherContent, IonList, IonItem, IonSkeletonText, IonButton,
   ],
   template: `
     <ion-header>
@@ -61,28 +62,56 @@ import { Fixture, League, Standing } from '../../models';
         </ion-segment>
       </div>
 
+      @if (error()) {
+        <div class="px-4 pt-2">
+          <div class="error-state">
+            <ion-icon name="alert-circle" class="error-icon"></ion-icon>
+            <h3>Something went wrong</h3>
+            <p>{{ error() }}</p>
+            <ion-button fill="outline" size="small" (click)="loadLeagueData()">Try Again</ion-button>
+          </div>
+        </div>
+      } @else {
+
       <!-- Fixtures tab -->
       @if (tab() === 'fixtures') {
         <div class="px-4 pt-2">
-          @for (fix of fixtures(); track fix.id) {
-            <ion-card class="fixture-card">
-              <ion-card-content>
-                <div class="match-date">{{ fix.date | date:'EEE, MMM d · HH:mm' }}</div>
-                <div class="match-row">
-                  <div class="match-team">
-                    <img [src]="fix.teams.home.logo" class="team-logo-sm" />
-                    <span>{{ fix.teams.home.name }}</span>
-                  </div>
-                  <span class="match-vs">VS</span>
-                  <div class="match-team right">
-                    <span>{{ fix.teams.away.name }}</span>
-                    <img [src]="fix.teams.away.logo" class="team-logo-sm" />
-                  </div>
+          @if (isLoading()) {
+            @for (n of [1,2,3,4,5]; track n) {
+              <div class="skeleton-card">
+                <ion-skeleton-text [animated]="true" style="width: 35%; height: 10px; border-radius: 4px"></ion-skeleton-text>
+                <div style="display: flex; justify-content: space-between; margin-top: 12px">
+                  <ion-skeleton-text [animated]="true" style="width: 40%; height: 16px; border-radius: 4px"></ion-skeleton-text>
+                  <ion-skeleton-text [animated]="true" style="width: 10%; height: 16px; border-radius: 4px"></ion-skeleton-text>
+                  <ion-skeleton-text [animated]="true" style="width: 40%; height: 16px; border-radius: 4px"></ion-skeleton-text>
                 </div>
-              </ion-card-content>
-            </ion-card>
-          } @empty {
-            <div class="empty-state">No upcoming fixtures</div>
+              </div>
+            }
+          } @else if (fixtures().length === 0) {
+            <div class="empty-state">
+              <ion-icon name="football-outline" class="empty-icon"></ion-icon>
+              <h3>No fixtures found</h3>
+              <p>No upcoming fixtures for this league</p>
+            </div>
+          } @else {
+            @for (fix of fixtures(); track fix.id) {
+              <ion-card class="fixture-card">
+                <ion-card-content>
+                  <div class="match-date">{{ fix.date | date:'EEE, MMM d · HH:mm' }}</div>
+                  <div class="match-row">
+                    <div class="match-team">
+                      <img [src]="fix.teams.home.logo" class="team-logo-sm" />
+                      <span>{{ fix.teams.home.name }}</span>
+                    </div>
+                    <span class="match-vs">VS</span>
+                    <div class="match-team right">
+                      <span>{{ fix.teams.away.name }}</span>
+                      <img [src]="fix.teams.away.logo" class="team-logo-sm" />
+                    </div>
+                  </div>
+                </ion-card-content>
+              </ion-card>
+            }
           }
         </div>
       }
@@ -90,25 +119,42 @@ import { Fixture, League, Standing } from '../../models';
       <!-- Results tab -->
       @if (tab() === 'results') {
         <div class="px-4 pt-2">
-          @for (fix of results(); track fix.id) {
-            <ion-card class="fixture-card">
-              <ion-card-content>
-                <div class="match-date">{{ fix.date | date:'EEE, MMM d' }}</div>
-                <div class="match-row">
-                  <div class="match-team">
-                    <img [src]="fix.teams.home.logo" class="team-logo-sm" />
-                    <span>{{ fix.teams.home.name }}</span>
-                  </div>
-                  <span class="match-score">{{ fix.goals.home }} - {{ fix.goals.away }}</span>
-                  <div class="match-team right">
-                    <span>{{ fix.teams.away.name }}</span>
-                    <img [src]="fix.teams.away.logo" class="team-logo-sm" />
-                  </div>
+          @if (isLoading()) {
+            @for (n of [1,2,3,4,5]; track n) {
+              <div class="skeleton-card">
+                <ion-skeleton-text [animated]="true" style="width: 30%; height: 10px; border-radius: 4px"></ion-skeleton-text>
+                <div style="display: flex; justify-content: space-between; margin-top: 12px">
+                  <ion-skeleton-text [animated]="true" style="width: 35%; height: 16px; border-radius: 4px"></ion-skeleton-text>
+                  <ion-skeleton-text [animated]="true" style="width: 15%; height: 16px; border-radius: 4px"></ion-skeleton-text>
+                  <ion-skeleton-text [animated]="true" style="width: 35%; height: 16px; border-radius: 4px"></ion-skeleton-text>
                 </div>
-              </ion-card-content>
-            </ion-card>
-          } @empty {
-            <div class="empty-state">No recent results</div>
+              </div>
+            }
+          } @else if (results().length === 0) {
+            <div class="empty-state">
+              <ion-icon name="football-outline" class="empty-icon"></ion-icon>
+              <h3>No recent results</h3>
+              <p>Results will appear after matches are played</p>
+            </div>
+          } @else {
+            @for (fix of results(); track fix.id) {
+              <ion-card class="fixture-card">
+                <ion-card-content>
+                  <div class="match-date">{{ fix.date | date:'EEE, MMM d' }}</div>
+                  <div class="match-row">
+                    <div class="match-team">
+                      <img [src]="fix.teams.home.logo" class="team-logo-sm" />
+                      <span>{{ fix.teams.home.name }}</span>
+                    </div>
+                    <span class="match-score">{{ fix.goals.home }} - {{ fix.goals.away }}</span>
+                    <div class="match-team right">
+                      <span>{{ fix.teams.away.name }}</span>
+                      <img [src]="fix.teams.away.logo" class="team-logo-sm" />
+                    </div>
+                  </div>
+                </ion-card-content>
+              </ion-card>
+            }
           }
         </div>
       }
@@ -116,34 +162,52 @@ import { Fixture, League, Standing } from '../../models';
       <!-- Standings tab -->
       @if (tab() === 'standings') {
         <div class="px-4 pt-2">
-          <div class="standings-table">
-            <div class="standings-header">
-              <span class="col-pos">#</span>
-              <span class="col-team">Team</span>
-              <span class="col-stat">P</span>
-              <span class="col-stat">W</span>
-              <span class="col-stat">D</span>
-              <span class="col-stat">L</span>
-              <span class="col-stat">GD</span>
-              <span class="col-pts">Pts</span>
-            </div>
-            @for (row of standings(); track row.rank) {
-              <div class="standings-row" [class.top-4]="row.rank <= 4">
-                <span class="col-pos">{{ row.rank }}</span>
-                <span class="col-team">
-                  <img [src]="row.team.logo" class="team-logo-xs" />
-                  {{ row.team.name }}
-                </span>
-                <span class="col-stat">{{ row.played }}</span>
-                <span class="col-stat">{{ row.win }}</span>
-                <span class="col-stat">{{ row.draw }}</span>
-                <span class="col-stat">{{ row.lose }}</span>
-                <span class="col-stat">{{ row.goalsDiff > 0 ? '+' : '' }}{{ row.goalsDiff }}</span>
-                <span class="col-pts">{{ row.points }}</span>
+          @if (isLoading()) {
+            @for (n of [1,2,3,4,5,6,7,8]; track n) {
+              <div style="display: flex; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border)">
+                <ion-skeleton-text [animated]="true" style="width: 24px; height: 14px; border-radius: 4px"></ion-skeleton-text>
+                <ion-skeleton-text [animated]="true" style="flex: 1; height: 14px; border-radius: 4px"></ion-skeleton-text>
+                <ion-skeleton-text [animated]="true" style="width: 32px; height: 14px; border-radius: 4px"></ion-skeleton-text>
               </div>
             }
-          </div>
+          } @else if (standings().length === 0) {
+            <div class="empty-state">
+              <ion-icon name="ribbon-outline" class="empty-icon"></ion-icon>
+              <h3>No standings available</h3>
+              <p>League table data not available yet</p>
+            </div>
+          } @else {
+            <div class="standings-table">
+              <div class="standings-header">
+                <span class="col-pos">#</span>
+                <span class="col-team">Team</span>
+                <span class="col-stat">P</span>
+                <span class="col-stat">W</span>
+                <span class="col-stat">D</span>
+                <span class="col-stat">L</span>
+                <span class="col-stat">GD</span>
+                <span class="col-pts">Pts</span>
+              </div>
+              @for (row of standings(); track row.rank) {
+                <div class="standings-row" [class.top-4]="row.rank <= 4">
+                  <span class="col-pos">{{ row.rank }}</span>
+                  <span class="col-team">
+                    <img [src]="row.team.logo" class="team-logo-xs" />
+                    {{ row.team.name }}
+                  </span>
+                  <span class="col-stat">{{ row.played }}</span>
+                  <span class="col-stat">{{ row.win }}</span>
+                  <span class="col-stat">{{ row.draw }}</span>
+                  <span class="col-stat">{{ row.lose }}</span>
+                  <span class="col-stat">{{ row.goalsDiff > 0 ? '+' : '' }}{{ row.goalsDiff }}</span>
+                  <span class="col-pts">{{ row.points }}</span>
+                </div>
+              }
+            </div>
+          }
         </div>
+      }
+
       }
 
       <div class="bottom-spacer"></div>
@@ -182,7 +246,6 @@ import { Fixture, League, Standing } from '../../models';
     .col-team { flex: 1; display: flex; align-items: center; font-weight: 600; }
     .col-stat { width: 28px; text-align: center; color: var(--text-secondary); }
     .col-pts { width: 32px; text-align: center; font-weight: 800; color: var(--accent-gold); font-family: 'JetBrains Mono', monospace; }
-    .empty-state { text-align: center; padding: 40px 16px; color: var(--text-muted); }
     .bottom-spacer { height: 80px; }
   `],
 })
@@ -195,9 +258,11 @@ export class FootballPage implements OnInit {
   fixtures = signal<Fixture[]>([]);
   results = signal<Fixture[]>([]);
   standings = signal<Standing[]>([]);
+  isLoading = signal(true);
+  error = signal<string | null>(null);
 
   constructor() {
-    addIcons({ football, trophy, calendar, list });
+    addIcons({ football, trophy, calendar, list, alertCircle, footballOutline, ribbonOutline });
   }
 
   ngOnInit() {
@@ -212,9 +277,24 @@ export class FootballPage implements OnInit {
 
   loadLeagueData() {
     const lid = this.selectedLeague();
-    this.api.getFixtures(lid, 10).subscribe(f => this.fixtures.set(f));
-    this.api.getResults(lid, 10).subscribe(r => this.results.set(r));
-    this.api.getStandings(lid).subscribe(s => this.standings.set(s));
+    this.isLoading.set(true);
+    this.error.set(null);
+    forkJoin({
+      fixtures: this.api.getFixtures(lid, 10),
+      results: this.api.getResults(lid, 10),
+      standings: this.api.getStandings(lid),
+    }).subscribe({
+      next: (data) => {
+        this.fixtures.set(data.fixtures);
+        this.results.set(data.results);
+        this.standings.set(data.standings);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.error.set(err?.message || 'Failed to load football data');
+        this.isLoading.set(false);
+      },
+    });
   }
 
   refresh(event: any) {

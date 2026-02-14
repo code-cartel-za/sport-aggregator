@@ -2,12 +2,13 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons,
-  IonSegment, IonSegmentButton, IonLabel, IonIcon, IonBadge,
+  IonSegment, IonSegmentButton, IonLabel, IonIcon, IonBadge, IonSkeletonText, IonButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { football, speedometer, star, starOutline } from 'ionicons/icons';
+import { football, speedometer, star, starOutline, alertCircle, peopleOutline } from 'ionicons/icons';
 import { FantasyProjectionService } from '../../services/fantasy-projection.service';
 import { DreamTeam, F1FantasyTeam } from '../../models';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-dream-team',
@@ -15,7 +16,7 @@ import { DreamTeam, F1FantasyTeam } from '../../models';
   imports: [
     CommonModule,
     IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons,
-    IonSegment, IonSegmentButton, IonLabel, IonIcon, IonBadge,
+    IonSegment, IonSegmentButton, IonLabel, IonIcon, IonBadge, IonSkeletonText, IonButton,
   ],
   template: `
     <ion-header>
@@ -32,7 +33,49 @@ import { DreamTeam, F1FantasyTeam } from '../../models';
         </ion-segment>
       </div>
 
-      @if (mode() === 'fpl' && dreamTeam()) {
+      @if (error()) {
+        <div class="px-4 pt-3">
+          <div class="error-state">
+            <ion-icon name="alert-circle" class="error-icon"></ion-icon>
+            <h3>Something went wrong</h3>
+            <p>{{ error() }}</p>
+            <ion-button fill="outline" size="small" (click)="loadData()">Try Again</ion-button>
+          </div>
+        </div>
+      } @else if (isLoading()) {
+        <div class="px-4 pt-3">
+          <!-- Summary skeleton -->
+          <div style="display: flex; gap: 8px; margin-bottom: 16px">
+            @for (n of [1,2,3]; track n) {
+              <div class="skeleton-card" style="flex: 1; text-align: center">
+                <ion-skeleton-text [animated]="true" style="width: 60%; height: 10px; border-radius: 4px; margin: 0 auto"></ion-skeleton-text>
+                <ion-skeleton-text [animated]="true" style="width: 40%; height: 20px; border-radius: 4px; margin: 6px auto 0"></ion-skeleton-text>
+              </div>
+            }
+          </div>
+          @for (n of [1,2,3,4,5,6]; track n) {
+            <div class="skeleton-card" style="display: flex; align-items: center; gap: 12px">
+              <ion-skeleton-text [animated]="true" style="width: 32px; height: 22px; border-radius: 6px"></ion-skeleton-text>
+              <div style="flex: 1">
+                <ion-skeleton-text [animated]="true" style="width: 50%; height: 14px; border-radius: 4px"></ion-skeleton-text>
+                <ion-skeleton-text [animated]="true" style="width: 35%; height: 10px; border-radius: 4px; margin-top: 4px"></ion-skeleton-text>
+              </div>
+              <ion-skeleton-text [animated]="true" style="width: 40px; height: 20px; border-radius: 4px"></ion-skeleton-text>
+            </div>
+          }
+        </div>
+      } @else {
+
+      @if (mode() === 'fpl') {
+        @if (!dreamTeam()) {
+          <div class="px-4 pt-3">
+            <div class="empty-state">
+              <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+              <h3>No dream team yet</h3>
+              <p>Build your dream team after data sync</p>
+            </div>
+          </div>
+        } @else {
         <div class="px-4 pt-3">
           <!-- Summary Bar -->
           <div class="summary-bar">
@@ -84,9 +127,19 @@ import { DreamTeam, F1FantasyTeam } from '../../models';
             </div>
           }
         </div>
+        }
       }
 
-      @if (mode() === 'f1' && f1Team()) {
+      @if (mode() === 'f1') {
+        @if (!f1Team()) {
+          <div class="px-4 pt-3">
+            <div class="empty-state">
+              <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+              <h3>No F1 dream team yet</h3>
+              <p>Build your F1 dream team after data sync</p>
+            </div>
+          </div>
+        } @else {
         <div class="px-4 pt-3">
           <div class="summary-bar">
             <div class="summary-item">
@@ -124,6 +177,9 @@ import { DreamTeam, F1FantasyTeam } from '../../models';
             </div>
           }
         </div>
+        }
+      }
+
       }
       <div class="bottom-spacer"></div>
     </ion-content>
@@ -165,11 +221,29 @@ export class DreamTeamPage implements OnInit {
   mode = signal('fpl');
   dreamTeam = signal<DreamTeam | null>(null);
   f1Team = signal<F1FantasyTeam | null>(null);
+  isLoading = signal(true);
+  error = signal<string | null>(null);
 
-  constructor() { addIcons({ football, speedometer, star, starOutline }); }
+  constructor() { addIcons({ football, speedometer, star, starOutline, alertCircle, peopleOutline }); }
 
-  ngOnInit() {
-    this.projService.getDreamTeam().subscribe(dt => this.dreamTeam.set(dt));
-    this.projService.getF1DreamTeam().subscribe(t => this.f1Team.set(t));
+  ngOnInit() { this.loadData(); }
+
+  loadData() {
+    this.isLoading.set(true);
+    this.error.set(null);
+    forkJoin({
+      dt: this.projService.getDreamTeam(),
+      f1: this.projService.getF1DreamTeam(),
+    }).subscribe({
+      next: (data) => {
+        this.dreamTeam.set(data.dt);
+        this.f1Team.set(data.f1);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.error.set(err?.message || 'Failed to load dream team');
+        this.isLoading.set(false);
+      },
+    });
   }
 }

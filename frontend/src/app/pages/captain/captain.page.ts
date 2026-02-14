@@ -2,14 +2,17 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons, IonBadge,
+  IonSkeletonText, IonButton, IonIcon,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { alertCircle, ribbonOutline } from 'ionicons/icons';
 import { FantasyProjectionService } from '../../services/fantasy-projection.service';
 import { CaptainPick } from '../../models';
 
 @Component({
   selector: 'app-captain',
   standalone: true,
-  imports: [CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons, IonBadge],
+  imports: [CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonBackButton, IonButtons, IonBadge, IonSkeletonText, IonButton, IonIcon],
   template: `
     <ion-header>
       <ion-toolbar>
@@ -19,26 +22,56 @@ import { CaptainPick } from '../../models';
     </ion-header>
     <ion-content fullscreen>
       <div class="px-4 pt-3">
-        @for (pick of picks(); track pick.player.id; let i = $index) {
-          <div class="captain-card animate-fade-in" [class.top-pick]="i === 0" [style.animation-delay]="(i * 0.05) + 's'">
-            <div class="cap-rank" [class.rank-gold]="i === 0">{{ i + 1 }}</div>
-            <div class="cap-info">
-              <div class="cap-name">{{ pick.player.name }}</div>
-              <div class="cap-meta">
-                <ion-badge class="pos-badge" [class]="'pos-' + pick.player.position.toLowerCase()">{{ pick.player.position }}</ion-badge>
-                {{ pick.player.teamShort }} · FDR {{ pick.fixtureDifficulty | number:'1.1-1' }}
-              </div>
-              <div class="cap-reason">{{ pick.reason }}</div>
-            </div>
-            <div class="cap-points-col">
-              <div class="cap-pts">{{ pick.captainPoints | number:'1.1-1' }}</div>
-              <div class="cap-pts-sub">×2 = {{ pick.captainPoints | number:'1.1-1' }}</div>
-              <div class="cap-conf">
-                <div class="conf-mini-bar"><div class="conf-mini-fill" [style.width.%]="pick.confidence" [class]="pick.confidence >= 75 ? 'high' : pick.confidence >= 50 ? 'medium' : 'low'"></div></div>
-                <span class="conf-mini-pct">{{ pick.confidence }}%</span>
-              </div>
-            </div>
+        @if (error()) {
+          <div class="error-state">
+            <ion-icon name="alert-circle" class="error-icon"></ion-icon>
+            <h3>Something went wrong</h3>
+            <p>{{ error() }}</p>
+            <ion-button fill="outline" size="small" (click)="loadData()">Try Again</ion-button>
           </div>
+        } @else if (isLoading()) {
+          @for (n of [1,2,3,4,5]; track n) {
+            <div class="skeleton-card" style="display: flex; align-items: center; gap: 12px">
+              <ion-skeleton-text [animated]="true" style="width: 24px; height: 20px; border-radius: 4px"></ion-skeleton-text>
+              <div style="flex: 1">
+                <ion-skeleton-text [animated]="true" style="width: 50%; height: 14px; border-radius: 4px"></ion-skeleton-text>
+                <ion-skeleton-text [animated]="true" style="width: 35%; height: 10px; border-radius: 4px; margin-top: 4px"></ion-skeleton-text>
+                <ion-skeleton-text [animated]="true" style="width: 70%; height: 10px; border-radius: 4px; margin-top: 4px"></ion-skeleton-text>
+              </div>
+              <div style="text-align: right">
+                <ion-skeleton-text [animated]="true" style="width: 50px; height: 24px; border-radius: 4px"></ion-skeleton-text>
+                <ion-skeleton-text [animated]="true" style="width: 40px; height: 3px; border-radius: 2px; margin-top: 6px"></ion-skeleton-text>
+              </div>
+            </div>
+          }
+        } @else if (picks().length === 0) {
+          <div class="empty-state">
+            <ion-icon name="ribbon-outline" class="empty-icon"></ion-icon>
+            <h3>No captain picks</h3>
+            <p>Captain picks available after data sync</p>
+          </div>
+        } @else {
+          @for (pick of picks(); track pick.player.id; let i = $index) {
+            <div class="captain-card animate-fade-in" [class.top-pick]="i === 0" [style.animation-delay]="(i * 0.05) + 's'">
+              <div class="cap-rank" [class.rank-gold]="i === 0">{{ i + 1 }}</div>
+              <div class="cap-info">
+                <div class="cap-name">{{ pick.player.name }}</div>
+                <div class="cap-meta">
+                  <ion-badge class="pos-badge" [class]="'pos-' + pick.player.position.toLowerCase()">{{ pick.player.position }}</ion-badge>
+                  {{ pick.player.teamShort }} · FDR {{ pick.fixtureDifficulty | number:'1.1-1' }}
+                </div>
+                <div class="cap-reason">{{ pick.reason }}</div>
+              </div>
+              <div class="cap-points-col">
+                <div class="cap-pts">{{ pick.captainPoints | number:'1.1-1' }}</div>
+                <div class="cap-pts-sub">×2 = {{ pick.captainPoints | number:'1.1-1' }}</div>
+                <div class="cap-conf">
+                  <div class="conf-mini-bar"><div class="conf-mini-fill" [style.width.%]="pick.confidence" [class]="pick.confidence >= 75 ? 'high' : pick.confidence >= 50 ? 'medium' : 'low'"></div></div>
+                  <span class="conf-mini-pct">{{ pick.confidence }}%</span>
+                </div>
+              </div>
+            </div>
+          }
         }
       </div>
       <div class="bottom-spacer"></div>
@@ -74,8 +107,19 @@ import { CaptainPick } from '../../models';
 export class CaptainPage implements OnInit {
   private projService = inject(FantasyProjectionService);
   picks = signal<CaptainPick[]>([]);
+  isLoading = signal(true);
+  error = signal<string | null>(null);
 
-  ngOnInit() {
-    this.projService.getCaptainPicks().subscribe(p => this.picks.set(p));
+  constructor() { addIcons({ alertCircle, ribbonOutline }); }
+
+  ngOnInit() { this.loadData(); }
+
+  loadData() {
+    this.isLoading.set(true);
+    this.error.set(null);
+    this.projService.getCaptainPicks().subscribe({
+      next: (p) => { this.picks.set(p); this.isLoading.set(false); },
+      error: (err) => { this.error.set(err?.message || 'Failed to load captain picks'); this.isLoading.set(false); },
+    });
   }
 }
