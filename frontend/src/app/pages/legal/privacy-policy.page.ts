@@ -10,7 +10,7 @@ import {
   imports: [CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton],
   template: `
     <ion-header>
-      <ion-toolbar color="primary">
+      <ion-toolbar >
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/settings"></ion-back-button>
         </ion-buttons>

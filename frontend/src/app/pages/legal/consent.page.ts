@@ -14,7 +14,7 @@ import { PrivacyService } from '../../services/privacy.service';
   imports: [CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButton, IonCheckbox, IonIcon],
   template: `
     <ion-header>
-      <ion-toolbar color="primary">
+      <ion-toolbar >
         <ion-title>
           <span class="page-title">Welcome to Sport Aggregator</span>
         </ion-title>

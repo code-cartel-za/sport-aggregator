@@ -71,6 +71,7 @@
   --ion-safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* ── Dark Mode (default) ── */
 body, body.dark {
   font-family: 'Plus Jakarta Sans', sans-serif;
   background: var(--bg);
@@ -92,6 +93,36 @@ body, body.dark {
   --card-border: var(--border);
 }
 
+/* ── Light Mode ── */
+body.light {
+  --bg: #F5F6FA;
+  --surface: #FFFFFF;
+  --surface-elevated: #F0F1F5;
+  --border: #E2E4EA;
+  --text-primary: #1A1D26;
+  --text-secondary: #5A6072;
+  --text-muted: #9098A8;
+
+  --ion-background-color: var(--bg);
+  --ion-background-color-rgb: 245, 246, 250;
+  --ion-text-color: var(--text-primary);
+  --ion-text-color-rgb: 26, 29, 38;
+  --ion-item-background: transparent;
+  --ion-card-background: var(--surface);
+  --ion-toolbar-background: var(--bg);
+  --ion-tab-bar-background: var(--bg);
+  --ion-tab-bar-color: var(--text-muted);
+  --ion-tab-bar-color-selected: var(--accent-gold);
+  --ion-border-color: var(--border);
+
+  --card-bg: var(--surface);
+  --card-border: var(--border);
+
+  ion-segment-button {
+    --color-checked: #1A1D26;
+  }
+}
+
 /* ── Typography ── */
 
 h1, h2, h3, h4, h5, h6,
@@ -109,19 +140,17 @@ ion-title, ion-card-title {
 /* ── Ionic Component Overrides ── */
 
 ion-toolbar {
-  --background: transparent !important;
+  --background: var(--bg) !important;
   --border-width: 0 !important;
   --min-height: 56px;
-}
-
-ion-toolbar[color="primary"] {
-  --background: transparent !important;
   --color: var(--text-primary) !important;
+  
   ion-title {
     font-family: 'Outfit', sans-serif !important;
     font-weight: 700;
     font-size: 1.4rem;
     letter-spacing: -0.02em;
+    color: var(--text-primary) !important;
   }
 }
 
@@ -232,6 +261,48 @@ ion-badge {
 
 ion-back-button {
   --color: var(--accent-gold);
+}
+
+/* ── Page Title ── */
+
+.page-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  font-size: 1.1rem;
+  color: var(--accent-gold);
+}
+
+/* ── Settings Card Improvements ── */
+
+ion-card-header {
+  padding: 14px 16px 4px !important;
+}
+
+ion-card-title {
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  color: var(--text-secondary) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+ion-card-content {
+  padding: 8px 16px 14px !important;
+}
+
+ion-card-content ion-item h3 {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+}
+
+ion-card-content ion-item p {
+  color: var(--text-muted);
+  font-size: 0.75rem;
 }
 
 /* ── Command Center Utilities ── */

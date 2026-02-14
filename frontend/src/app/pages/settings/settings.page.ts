@@ -33,8 +33,8 @@ import { PaywallComponent } from '../../components/paywall/paywall.component';
   ],
   template: `
     <ion-header>
-      <ion-toolbar color="primary">
-        <ion-title><span style="font-family: Outfit, sans-serif; font-weight: 800; letter-spacing: 0.06em; font-size: 1rem; color: var(--accent-gold)">⚙️ SETTINGS</span></ion-title>
+      <ion-toolbar>
+        <ion-title><span class="page-title">⚙️ SETTINGS</span></ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -381,7 +381,13 @@ export class SettingsPage {
 
   toggleDark(enabled: boolean) {
     this.subService.updatePreferences({ darkMode: enabled });
-    document.body.classList.toggle('dark', enabled);
+    if (enabled) {
+      document.body.classList.remove('light');
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+      document.body.classList.add('light');
+    }
   }
 
   async updateMarketing(enabled: boolean): Promise<void> {

@@ -24,8 +24,8 @@ import { Team, Driver, Race } from '../../models';
   ],
   template: `
     <ion-header>
-      <ion-toolbar color="primary">
-        <ion-title><span style="font-family: Outfit, sans-serif; font-weight: 800; letter-spacing: 0.06em; font-size: 1rem; color: var(--accent-gold)">📊 INSIGHTS</span></ion-title>
+      <ion-toolbar >
+        <ion-title><span class="page-title">📊 INSIGHTS</span></ion-title>
       </ion-toolbar>
     </ion-header>
 
