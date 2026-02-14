@@ -48,3 +48,6 @@ export {
 export {
   b2bCreateApiKey, b2bRevokeApiKey, b2bGetApiKeyUsage,
 } from "./handlers/b2b-admin.handlers";
+
+// Privacy / GDPR
+export { exportUserData, deleteUserData } from "./handlers/privacy.handlers";

@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Observable, of, map, switchMap } from 'rxjs';
 import {
   FantasyPlayer, FantasyProjection, PointsBreakdown, ProjectionFactors,
   CaptainPick, Differential, DreamTeam, DreamTeamPick, GameweekSummary,
@@ -7,6 +7,7 @@ import {
   F1FantasyDriver, F1FantasyProjection, F1PointsBreakdown, F1FantasyTeam,
   PlayerComparison, ComparisonMetric,
 } from '../models';
+import { FplFirestoreService } from './fpl-firestore.service';
 
 /* ═══════════════════════════════════════════════════════════
    FPL Scoring Constants
@@ -56,26 +57,37 @@ const MOCK_F1_DRIVERS: F1FantasyDriver[] = [
 
 @Injectable({ providedIn: 'root' })
 export class FantasyProjectionService {
+  private fplFirestore = inject(FplFirestoreService);
 
   /* ── FPL Players ── */
 
   getPlayers(): Observable<FantasyPlayer[]> {
-    return of(MOCK_FPL_PLAYERS);
+    return this.fplFirestore.getPlayers().pipe(
+      map(players => players.length > 0 ? players : MOCK_FPL_PLAYERS),
+    );
   }
 
   getPlayersByPosition(position: FplPosition): Observable<FantasyPlayer[]> {
-    return of(MOCK_FPL_PLAYERS.filter(p => p.position === position));
+    return this.getPlayers().pipe(
+      map(players => players.filter(p => p.position === position)),
+    );
   }
 
   /* ── FPL Projections ── */
 
   getProjections(): Observable<FantasyProjection[]> {
-    return of(MOCK_FPL_PLAYERS.map(p => this.projectPlayer(p)));
+    return this.getPlayers().pipe(
+      map(players => players.map(p => this.projectPlayer(p))),
+    );
   }
 
   getProjection(playerId: number): Observable<FantasyProjection | undefined> {
-    const player = MOCK_FPL_PLAYERS.find(p => p.id === playerId);
-    return of(player ? this.projectPlayer(player) : undefined);
+    return this.getPlayers().pipe(
+      map(players => {
+        const player = players.find(p => p.id === playerId);
+        return player ? this.projectPlayer(player) : undefined;
+      }),
+    );
   }
 
   private projectPlayer(p: FantasyPlayer): FantasyProjection {
@@ -125,76 +137,85 @@ export class FantasyProjectionService {
   /* ── Captain Picks ── */
 
   getCaptainPicks(): Observable<CaptainPick[]> {
-    const projections = MOCK_FPL_PLAYERS.map(p => ({ player: p, proj: this.projectPlayer(p) }));
-    const picks: CaptainPick[] = projections
-      .sort((a, b) => b.proj.projectedPoints - a.proj.projectedPoints)
-      .slice(0, 10)
-      .map(({ player, proj }) => ({
-        player,
-        projectedPoints: proj.projectedPoints,
-        captainPoints: Math.round(proj.projectedPoints * 2 * 10) / 10,
-        fixtureDifficulty: proj.factors.fixtureDifficulty,
-        confidence: proj.confidence,
-        reason: proj.projectedPoints > 7 ? 'Elite form + easy fixture' : proj.projectedPoints > 5 ? 'Strong form, favorable matchup' : 'Consistent returns expected',
-      }));
-    return of(picks);
+    return this.getPlayers().pipe(
+      map(players => {
+        const projections = players.map(p => ({ player: p, proj: this.projectPlayer(p) }));
+        return projections
+          .sort((a, b) => b.proj.projectedPoints - a.proj.projectedPoints)
+          .slice(0, 10)
+          .map(({ player, proj }) => ({
+            player,
+            projectedPoints: proj.projectedPoints,
+            captainPoints: Math.round(proj.projectedPoints * 2 * 10) / 10,
+            fixtureDifficulty: proj.factors.fixtureDifficulty,
+            confidence: proj.confidence,
+            reason: proj.projectedPoints > 7 ? 'Elite form + easy fixture' : proj.projectedPoints > 5 ? 'Strong form, favorable matchup' : 'Consistent returns expected',
+          }));
+      }),
+    );
   }
 
   /* ── Differentials ── */
 
   getDifferentials(): Observable<Differential[]> {
-    return of(
-      MOCK_FPL_PLAYERS
-        .filter(p => p.ownership < 25)
-        .map(p => {
-          const proj = this.projectPlayer(p);
-          return {
-            player: p,
-            projectedPoints: proj.projectedPoints,
-            valueScore: Math.round((proj.projectedPoints / p.price) * 100) / 100,
-            ownershipDelta: Math.round((Math.random() * 4 - 2) * 10) / 10,
-            trend: (Math.random() > 0.6 ? 'rising' : Math.random() > 0.3 ? 'stable' : 'falling') as 'rising' | 'falling' | 'stable',
-          };
-        })
-        .sort((a, b) => b.valueScore - a.valueScore)
+    return this.getPlayers().pipe(
+      map(players =>
+        players
+          .filter(p => p.ownership < 25)
+          .map(p => {
+            const proj = this.projectPlayer(p);
+            return {
+              player: p,
+              projectedPoints: proj.projectedPoints,
+              valueScore: Math.round((proj.projectedPoints / p.price) * 100) / 100,
+              ownershipDelta: Math.round((Math.random() * 4 - 2) * 10) / 10,
+              trend: (Math.random() > 0.6 ? 'rising' : Math.random() > 0.3 ? 'stable' : 'falling') as 'rising' | 'falling' | 'stable',
+            };
+          })
+          .sort((a, b) => b.valueScore - a.valueScore)
+      ),
     );
   }
 
   /* ── Dream Team ── */
 
   getDreamTeam(): Observable<DreamTeam> {
-    const sorted = [...MOCK_FPL_PLAYERS].sort((a, b) => this.projectPlayer(b).projectedPoints - this.projectPlayer(a).projectedPoints);
-    const gks = sorted.filter(p => p.position === 'GK');
-    const defs = sorted.filter(p => p.position === 'DEF');
-    const mids = sorted.filter(p => p.position === 'MID');
-    const fwds = sorted.filter(p => p.position === 'FWD');
+    return this.getPlayers().pipe(
+      map(players => {
+        const sorted = [...players].sort((a, b) => this.projectPlayer(b).projectedPoints - this.projectPlayer(a).projectedPoints);
+        const gks = sorted.filter(p => p.position === 'GK');
+        const defs = sorted.filter(p => p.position === 'DEF');
+        const mids = sorted.filter(p => p.position === 'MID');
+        const fwds = sorted.filter(p => p.position === 'FWD');
 
-    const picks: FantasyPlayer[] = [gks[0], ...defs.slice(0, 3), ...mids.slice(0, 4), ...fwds.slice(0, 3)];
-    const bench: FantasyPlayer[] = [gks[1] ?? gks[0], defs[3] ?? defs[0], mids[4] ?? mids[0], fwds[3] ?? fwds[0]];
+        const picks: FantasyPlayer[] = [gks[0], ...defs.slice(0, 3), ...mids.slice(0, 4), ...fwds.slice(0, 3)];
+        const bench: FantasyPlayer[] = [gks[1] ?? gks[0], defs[3] ?? defs[0], mids[4] ?? mids[0], fwds[3] ?? fwds[0]];
 
-    const makePick = (p: FantasyPlayer, i: number, isCap: boolean, isVice: boolean): DreamTeamPick => ({
-      player: p,
-      projectedPoints: this.projectPlayer(p).projectedPoints,
-      isCaptain: isCap,
-      isViceCaptain: isVice,
-      position: i,
-    });
+        const makePick = (p: FantasyPlayer, i: number, isCap: boolean, isVice: boolean): DreamTeamPick => ({
+          player: p,
+          projectedPoints: this.projectPlayer(p).projectedPoints,
+          isCaptain: isCap,
+          isViceCaptain: isVice,
+          position: i,
+        });
 
-    const starters = picks.map((p, i) => makePick(p, i, i === (picks.indexOf(sorted[0]) >= 0 ? picks.indexOf(sorted[0]) : 0), i === 1));
-    const benchPicks = bench.map((p, i) => makePick(p, 11 + i, false, false));
+        const starters = picks.map((p, i) => makePick(p, i, i === (picks.indexOf(sorted[0]) >= 0 ? picks.indexOf(sorted[0]) : 0), i === 1));
+        const benchPicks = bench.map((p, i) => makePick(p, 11 + i, false, false));
 
-    const totalProjected = starters.reduce((s, p) => s + p.projectedPoints * (p.isCaptain ? 2 : 1), 0);
+        const totalProjected = starters.reduce((s, p) => s + p.projectedPoints * (p.isCaptain ? 2 : 1), 0);
 
-    return of({
-      formation: '3-4-3',
-      starters,
-      bench: benchPicks,
-      captainId: starters.find(s => s.isCaptain)?.player.id ?? 1,
-      viceCaptainId: starters[1]?.player.id ?? 2,
-      totalProjected: Math.round(totalProjected * 10) / 10,
-      totalCost: [...picks, ...bench].reduce((s, p) => s + p.price, 0),
-      budget: 100,
-    });
+        return {
+          formation: '3-4-3',
+          starters,
+          bench: benchPicks,
+          captainId: starters.find(s => s.isCaptain)?.player.id ?? 1,
+          viceCaptainId: starters[1]?.player.id ?? 2,
+          totalProjected: Math.round(totalProjected * 10) / 10,
+          totalCost: [...picks, ...bench].reduce((s, p) => s + p.price, 0),
+          budget: 100,
+        };
+      }),
+    );
   }
 
   /* ── Gameweek Summary ── */
@@ -242,7 +263,9 @@ export class FantasyProjectionService {
   /* ── Simulation ── */
 
   simulateScenario(playerId: number, events: SimulationEvent[]): Observable<SimulationScenario> {
-    const player = MOCK_FPL_PLAYERS.find(p => p.id === playerId) ?? MOCK_FPL_PLAYERS[0];
+    return this.getPlayers().pipe(
+      map(players => {
+        const player = players.find(p => p.id === playerId) ?? players[0] ?? MOCK_FPL_PLAYERS[0];
     const baseProj = this.projectPlayer(player);
     let simPts = 2; // base minutes
 
@@ -260,14 +283,16 @@ export class FantasyProjectionService {
       }
     }
 
-    return of({
+    return {
       playerId: player.id,
       playerName: player.name,
       events,
       basePoints: baseProj.projectedPoints,
       simulatedPoints: simPts,
       delta: Math.round((simPts - baseProj.projectedPoints) * 10) / 10,
-    });
+    };
+      }),
+    );
   }
 
   /* ── F1 Fantasy ── */
@@ -330,21 +355,25 @@ export class FantasyProjectionService {
   /* ── Comparison ── */
 
   comparePlayers(id1: number, id2: number): Observable<PlayerComparison> {
-    const p1 = MOCK_FPL_PLAYERS.find(p => p.id === id1) ?? MOCK_FPL_PLAYERS[0];
-    const p2 = MOCK_FPL_PLAYERS.find(p => p.id === id2) ?? MOCK_FPL_PLAYERS[1];
+    return this.getPlayers().pipe(
+      map(players => {
+        const p1 = players.find(p => p.id === id1) ?? players[0] ?? MOCK_FPL_PLAYERS[0];
+        const p2 = players.find(p => p.id === id2) ?? players[1] ?? MOCK_FPL_PLAYERS[1];
 
-    const metrics: ComparisonMetric[] = [
-      { label: 'Total Points', value1: p1.totalPoints, value2: p2.totalPoints, maxValue: 200 },
-      { label: 'Form', value1: p1.form, value2: p2.form, maxValue: 12 },
-      { label: 'Goals', value1: p1.goals, value2: p2.goals, maxValue: 20 },
-      { label: 'Assists', value1: p1.assists, value2: p2.assists, maxValue: 15 },
-      { label: 'Points/Game', value1: p1.pointsPerGame, value2: p2.pointsPerGame, maxValue: 12 },
-      { label: 'ICT Index', value1: p1.ictIndex, value2: p2.ictIndex, maxValue: 400 },
-      { label: 'Ownership', value1: p1.ownership, value2: p2.ownership, maxValue: 100, unit: '%' },
-      { label: 'Price', value1: p1.price, value2: p2.price, maxValue: 15, unit: '£m' },
-    ];
+        const metrics: ComparisonMetric[] = [
+          { label: 'Total Points', value1: p1.totalPoints, value2: p2.totalPoints, maxValue: 200 },
+          { label: 'Form', value1: p1.form, value2: p2.form, maxValue: 12 },
+          { label: 'Goals', value1: p1.goals, value2: p2.goals, maxValue: 20 },
+          { label: 'Assists', value1: p1.assists, value2: p2.assists, maxValue: 15 },
+          { label: 'Points/Game', value1: p1.pointsPerGame, value2: p2.pointsPerGame, maxValue: 12 },
+          { label: 'ICT Index', value1: p1.ictIndex, value2: p2.ictIndex, maxValue: 400 },
+          { label: 'Ownership', value1: p1.ownership, value2: p2.ownership, maxValue: 100, unit: '%' },
+          { label: 'Price', value1: p1.price, value2: p2.price, maxValue: 15, unit: '£m' },
+        ];
 
-    return of({ player1: p1, player2: p2, metrics });
+        return { player1: p1, player2: p2, metrics };
+      }),
+    );
   }
 
   compareF1Drivers(id1: string, id2: string): Observable<PlayerComparison> {

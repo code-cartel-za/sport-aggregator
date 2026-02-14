@@ -23,6 +23,7 @@
     "@capacitor/ios": "^8.1.0",
     "@ionic/angular": "^8.7.17",
     "@ionic/angular-toolkit": "^12.3.0",
+    "@revenuecat/purchases-capacitor": "^12.1.2",
     "@tailwindcss/postcss": "^4.1.18",
     "firebase": "^12.9.0",
     "ionicons": "^8.0.13",
