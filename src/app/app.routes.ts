@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, loginGuard } from './guards/auth.guard';
+import { consentGuard } from './guards/consent.guard';
 
 export const routes: Routes = [
   {
@@ -8,9 +9,22 @@ export const routes: Routes = [
     canActivate: [loginGuard],
   },
   {
+    path: 'consent',
+    loadComponent: () => import('./pages/legal/consent.page').then(m => m.ConsentPage),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'privacy-policy',
+    loadComponent: () => import('./pages/legal/privacy-policy.page').then(m => m.PrivacyPolicyPage),
+  },
+  {
+    path: 'terms',
+    loadComponent: () => import('./pages/legal/terms.page').then(m => m.TermsPage),
+  },
+  {
     path: '',
     loadComponent: () => import('./app.tabs').then(m => m.TabsPage),
-    canActivate: [authGuard],
+    canActivate: [authGuard, consentGuard],
     children: [
       {
         path: 'home',

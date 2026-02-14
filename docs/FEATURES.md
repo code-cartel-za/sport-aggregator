@@ -44,6 +44,20 @@
 | F-034 | Points Simulator | Frontend | ✅ Done | `simulator.page.ts` | — | `feature.md` |
 | F-035 | Settings & Preferences | Frontend | ✅ Done | `settings.page.ts` | — | — |
 | F-036 | Design System (Command Center) | Frontend | ✅ Done | `styles.scss` | — | `feature.md` |
+| F-037 | Subscription Type System | Subscription | ✅ Done | `@types/subscription/` | — | `docs/COMPLIANCE.md` |
+| F-038 | Tier Configuration | Subscription | ✅ Done | `config/tiers.config.ts` | — | `docs/COMPLIANCE.md` |
+| F-039 | Tier Service | Subscription | ✅ Done | `services/tier.service.ts` | — | `docs/COMPLIANCE.md` |
+| F-040 | Usage Tracking Service | Subscription | ✅ Done | `services/usage-tracking.service.ts` | — | `docs/COMPLIANCE.md` |
+| F-041 | Privacy Service | Subscription | ✅ Done | `services/privacy.service.ts` | — | `docs/COMPLIANCE.md` |
+| F-042 | Paywall Component | Subscription | ✅ Done | `components/paywall/` | — | `docs/COMPLIANCE.md` |
+| F-043 | Blurred Content Component | Subscription | ✅ Done | `components/blurred-content/` | — | `docs/COMPLIANCE.md` |
+| F-044 | Usage Badge Component | Subscription | ✅ Done | `components/usage-badge/` | — | `docs/COMPLIANCE.md` |
+| F-045 | Tier Guards | Subscription | ✅ Done | `guards/tier.guard.ts` | — | `docs/COMPLIANCE.md` |
+| F-046 | Consent Guard | Subscription | ✅ Done | `guards/consent.guard.ts` | — | `docs/COMPLIANCE.md` |
+| F-047 | Privacy Policy Page | Legal | ✅ Done | `pages/legal/privacy-policy.page.ts` | — | `docs/COMPLIANCE.md` |
+| F-048 | Terms of Service Page | Legal | ✅ Done | `pages/legal/terms.page.ts` | — | `docs/COMPLIANCE.md` |
+| F-049 | Consent Page | Legal | ✅ Done | `pages/legal/consent.page.ts` | — | `docs/COMPLIANCE.md` |
+| F-050 | Settings Subscription & Privacy | Subscription | ✅ Done | `pages/settings/settings.page.ts` | — | `docs/COMPLIANCE.md` |
 
 ---
 
