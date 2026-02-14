@@ -55,29 +55,49 @@ Glass-morphism cards, gold accent borders, shimmer loading, gradient decorative 
 | 9 | 📰 Gameweek Digest | `/digest` | Weekly summary, deadline countdown, injury updates |
 | 10 | 🎲 Points Simulator | `/simulator` | "What if" scenario tool for event simulation |
 
-### Backend — Cloud Functions (19 endpoints)
+### Backend — Cloud Functions (22 endpoints)
 
-| Domain | Function | Description | Cache |
-|--------|----------|-------------|-------|
-| **Football Data** | `fetchEplTeams` | All 20 EPL teams → Firestore | — |
-| | `fetchEplPlayers` | All squad members → Firestore | — |
-| **FPL** | `syncFplBootstrap` | Full player data (prices, ownership, xG, ICT) | 24h |
-| | `getFplLivePoints` | Live gameweek points | 60s |
-| | `getFplPriceChanges` | Detect price rises/falls | — |
-| | `getFplPlayerSummary` | Player fixtures + history | 6h |
-| **Live Matches** | `getLiveScores` | All live fixture scores | 30s |
-| | `getMatchEvents` | Goals, cards, subs with minute | 30s |
-| | `getMatchLineups` | Starting XI + formation | 2h |
-| | `getMatchStats` | Shots, possession, corners | 30s |
-| | `getMatchPredictions` | Win probability + predictions | 12h |
-| **F1** | `getF1Positions` | Real-time race positions | 5s |
-| | `getF1Laps` | Sector times, lap durations | 10s |
-| | `getF1PitStops` | Pit timing + tire compounds | 15s |
-| | `getF1RaceControl` | Flags, safety car, incidents | 10s |
-| | `getF1Intervals` | Gaps to leader + car ahead | 10s |
-| | `syncF1Standings` | Driver + constructor standings | 24h |
-| **Cache** | `getCacheStatus` | All cache entries + staleness | — |
-| | `clearCache` | Clear specific key or all | — |
+| Domain | Function | Description | Cache | Writes To |
+|--------|----------|-------------|-------|-----------|
+| **Football Data** | `fetchEplTeams` | All 20 EPL teams → Firestore | — | `teams/`, `competitions/` |
+| | `fetchEplPlayers` | All squad members → Firestore | — | `players/` |
+| | `syncFixtures` | PL match fixtures | 1h | `fixtures/`, `cache/fixtures` |
+| | `syncStandings` | PL league standings | 1h | `competitions/PL/standings/`, `cache/` |
+| **FPL** | `syncFplBootstrap` | Full player data (prices, ownership, xG, ICT) | 24h | `fpl/bootstrap`, `cache/` |
+| | `getFplLivePoints` | Live gameweek points | 60s | `cache/` |
+| | `getFplPriceChanges` | Detect price rises/falls | — | `cache/` |
+| | `getFplPlayerSummary` | Player fixtures + history | 6h | `cache/` |
+| **Live Matches** | `getLiveScores` | All live fixture scores | 30s | `cache/` |
+| | `getMatchEvents` | Goals, cards, subs with minute | 30s | `cache/` |
+| | `getMatchLineups` | Starting XI + formation | 2h | `cache/` |
+| | `getMatchStats` | Shots, possession, corners | 30s | `cache/` |
+| | `getMatchPredictions` | Win probability + predictions | 12h | `cache/` |
+| **F1** | `getF1Positions` | Real-time race positions | 5s | `cache/` |
+| | `getF1Laps` | Sector times, lap durations | 10s | `cache/` |
+| | `getF1PitStops` | Pit timing + tire compounds | 15s | `cache/` |
+| | `getF1RaceControl` | Flags, safety car, incidents | 10s | `cache/` |
+| | `getF1Intervals` | Gaps to leader + car ahead | 10s | `cache/` |
+| | `syncF1Standings` | Driver + constructor standings | 24h | `cache/f1_standings_*` |
+| | `syncF1Races` | Race calendar by season | 24h | `cache/f1_races_*` |
+| **Cache** | `getCacheStatus` | All cache entries + staleness | — | — |
+| | `clearCache` | Clear specific key or all | — | — |
+
+### Backend — NestJS Ingestion (12 endpoints)
+
+| Endpoint | Method | Description | Writes To |
+|----------|--------|-------------|-----------|
+| `/ingestion/sync-all` | POST | Full sync across all sources | All collections |
+| `/ingestion/football/teams` | POST | Sync EPL teams | `teams/`, `competitions/` |
+| `/ingestion/football/players` | POST | Sync EPL players | `players/` |
+| `/ingestion/football/fixtures` | POST | Sync EPL fixtures | `fixtures/`, `cache/` |
+| `/ingestion/football/standings` | POST | Sync EPL standings | `competitions/*/standings/`, `cache/` |
+| `/ingestion/fpl/bootstrap` | POST | Sync FPL bootstrap | `fpl/bootstrap`, `cache/` |
+| `/ingestion/fpl/live?gw=X` | POST | Sync live GW data | `fpl/live_X`, `cache/` |
+| `/ingestion/fpl/player-history` | POST | Sync player history | `cache/` |
+| `/ingestion/f1/standings` | POST | Sync F1 standings | `cache/f1_standings_*` |
+| `/ingestion/f1/races` | POST | Sync F1 race calendar | `cache/f1_races_*` |
+| `/ingestion/f1/positions` | POST | Sync F1 live positions | `cache/` |
+| `/ingestion/f1/laps` | POST | Sync F1 lap data | `cache/` |
 
 ---
 
@@ -284,6 +304,19 @@ cd frontend && npx jest
 See [docs/TESTING.md](docs/TESTING.md) for full testing guide.
 
 ## 📋 Changelog
+
+### v0.8.0 — Firestore Data Layer & Ingestion
+- **Frontend → Firestore**: Football & F1 services now read directly from Firestore (no mock data, no client API calls)
+- **Firestore provider** added to Angular app config (`@angular/fire/firestore`)
+- **NestJS Ingestion Module**: 12 POST endpoints for syncing data from external APIs → Firestore
+- **CacheService**: Generic Firestore cache with TTL (get/set/getOrFetch pattern)
+- **New Cloud Functions**: `syncFixtures`, `syncStandings`, `syncF1Races` write to dedicated collections
+- **Updated Cloud Functions**: `syncF1Standings` now writes to `cache/f1_standings_drivers` + `cache/f1_standings_constructors`
+- **UI overhaul**: Fixed invisible toolbar text, dark/light mode toggle, improved settings cards
+- **Light mode theme**: Full light color palette with proper contrast
+- **TS4053 fixes**: Exported all service interfaces, imported in controllers
+- **Data architecture doc**: `docs/DATA-ARCHITECTURE.md` with Mermaid flow diagrams
+- **Cost**: App reads from Firestore (~$0.25/mo) instead of burning API quota per user
 
 ### v0.7.0 — Unit Tests
 - 75 unit tests across all three projects (NestJS, Functions, Frontend)

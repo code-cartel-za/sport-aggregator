@@ -68,6 +68,20 @@
 | F-058 | B2B API — Swagger Documentation | B2B API | ✅ Done | `nest-js-backend/src/main.ts` | — | `docs/B2B-API.md` |
 | F-059 | B2B API — Response Wrapper | B2B API | ✅ Done | `nest-js-backend/src/common/interceptors/` | — | `docs/B2B-API.md` |
 | F-060 | B2B API — Dockerfile | B2B API | ✅ Done | `nest-js-backend/Dockerfile` | — | `docs/B2B-API.md` |
+| F-061 | Firestore Data Layer — Football | Data Layer | ✅ Done | `services/football-api.service.ts` | Firestore reads | `docs/DATA-ARCHITECTURE.md` |
+| F-062 | Firestore Data Layer — F1 | Data Layer | ✅ Done | `services/f1-api.service.ts` | Firestore reads | `docs/DATA-ARCHITECTURE.md` |
+| F-063 | Firestore Provider (Angular) | Data Layer | ✅ Done | `app.config.ts` | — | `docs/DATA-ARCHITECTURE.md` |
+| F-064 | CacheService (NestJS) | Data Layer | ✅ Done | — | `common/services/cache.service.ts` | `docs/DATA-ARCHITECTURE.md` |
+| F-065 | NestJS Ingestion Module | Data Layer | ✅ Done | — | `modules/ingestion/` | `docs/DATA-ARCHITECTURE.md` |
+| F-066 | Ingestion — Football Sync (4 endpoints) | Data Layer | ✅ Done | — | `ingestion.service.ts` | `docs/DATA-ARCHITECTURE.md` |
+| F-067 | Ingestion — FPL Sync (3 endpoints) | Data Layer | ✅ Done | — | `ingestion.service.ts` | `docs/DATA-ARCHITECTURE.md` |
+| F-068 | Ingestion — F1 Sync (5 endpoints) | Data Layer | ✅ Done | — | `ingestion.service.ts` | `docs/DATA-ARCHITECTURE.md` |
+| F-069 | Cloud Function — syncFixtures | Data Layer | ✅ Done | — | `football-data.handlers.ts` | `docs/DATA-ARCHITECTURE.md` |
+| F-070 | Cloud Function — syncStandings | Data Layer | ✅ Done | — | `football-data.handlers.ts` | `docs/DATA-ARCHITECTURE.md` |
+| F-071 | Cloud Function — syncF1Races | Data Layer | ✅ Done | — | `f1.handlers.ts` | `docs/DATA-ARCHITECTURE.md` |
+| F-072 | Light Mode Theme | UI | ✅ Done | `styles.scss` | — | — |
+| F-073 | Dark/Light Mode Toggle | UI | ✅ Done | `settings.page.ts` | — | — |
+| F-074 | Unit Tests (75 tests) | Testing | ✅ Done | Frontend tests | NestJS + Functions tests | `docs/TESTING.md` |
 
 ---
 
@@ -194,6 +208,53 @@ flowchart TD
     STORE --> RETURN
     RETURN --> RES[JSON Response with fromCache flag]
 ```
+
+### App → Firestore Data Flow (v0.8.0+)
+
+```mermaid
+flowchart TD
+    subgraph Ingestion Layer
+        CF[Cloud Functions]
+        NJ[NestJS /ingestion/*]
+    end
+
+    subgraph External APIs
+        FD[football-data.org]
+        FPLAPI[FPL API]
+        OF1[OpenF1]
+        JOL[Jolpica]
+    end
+
+    subgraph Firestore Collections
+        TEAMS[(teams/)]
+        PLAYERS[(players/)]
+        FIXTURES[(fixtures/)]
+        COMP[(competitions/)]
+        FPLCOL[(fpl/)]
+        CACHE[(cache/)]
+    end
+
+    subgraph Frontend Services
+        FBS[FootballApiService]
+        F1S[F1ApiService]
+    end
+
+    FD --> CF & NJ
+    FPLAPI --> CF & NJ
+    OF1 --> CF & NJ
+    JOL --> CF & NJ
+
+    CF & NJ -->|write| TEAMS & PLAYERS & FIXTURES & COMP & FPLCOL & CACHE
+
+    TEAMS & FIXTURES & COMP -->|read| FBS
+    CACHE -->|read| F1S
+    FPLCOL -->|read| FBS
+
+    style FBS fill:#D4A847,color:#060D18
+    style F1S fill:#D4A847,color:#060D18
+```
+
+> **Key change in v0.8.0**: Frontend reads directly from Firestore — zero API calls from the client. Cloud Functions and NestJS ingestion endpoints populate the data.
 
 ### Fantasy Points Projection Flow
 
