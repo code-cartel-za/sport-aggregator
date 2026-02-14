@@ -449,3 +449,14 @@ All successes return:
   }
 }
 ```
+
+---
+
+## 🧪 Testing
+
+| # | Feature | Domain | Status | Location | Docs |
+|---|---------|--------|--------|----------|------|
+| T-001 | NestJS Unit Tests | Testing | ✅ Done | `nest-js-backend/src/**/*.spec.ts` | `docs/TESTING.md` |
+| T-002 | Cloud Functions Unit Tests | Testing | ✅ Done | `functions/src/**/*.spec.ts` | `docs/TESTING.md` |
+| T-003 | Frontend Unit Tests | Testing | ✅ Done | `frontend/src/**/*.spec.ts` | `docs/TESTING.md` |
+| T-004 | Mock Firestore Helper | Testing | ✅ Done | `nest-js-backend/src/test/helpers/` | `docs/TESTING.md` |

@@ -268,7 +268,33 @@ cd functions && npm install && npm run deploy
 
 ---
 
+## 🧪 Running Tests
+
+```bash
+# NestJS Backend
+cd nest-js-backend && npx jest
+
+# Cloud Functions
+cd functions && npx jest
+
+# Frontend
+cd frontend && npx jest
+```
+
+See [docs/TESTING.md](docs/TESTING.md) for full testing guide.
+
 ## 📋 Changelog
+
+### v0.7.0 — Unit Tests
+- 75 unit tests across all three projects (NestJS, Functions, Frontend)
+- API key guard tests (auth, rate limiting, expiry, status checks)
+- B2B response interceptor and exception filter tests
+- Service tests for auth, football, FPL, F1 modules
+- Validation, error handling, and caching utility tests
+- Tier configuration and usage tracking tests
+- Reusable in-memory Firestore mock helper
+- Jest configured for all projects
+- Testing documentation (`docs/TESTING.md`)
 
 ### v0.6.0 — B2B API
 - NestJS B2B API with full Swagger documentation
