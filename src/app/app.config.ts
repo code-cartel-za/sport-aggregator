@@ -5,9 +5,13 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideHttpClient } from '@angular/common/http';
 import { routes } from './app.routes';
 
-import { getApp, initializeApp, provideFirebaseApp } from '@angular/fire/app';
-import { browserLocalPersistence, getAuth, indexedDBLocalPersistence, initializeAuth, inMemoryPersistence, provideAuth } from '@angular/fire/auth';
-import { getAnalytics, provideAnalytics, ScreenTrackingService, UserTrackingService } from '@angular/fire/analytics';
+import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
+import {
+  getAuth, indexedDBLocalPersistence, browserLocalPersistence,
+  initializeAuth, provideAuth,
+} from '@angular/fire/auth';
+import { getAnalytics, provideAnalytics } from '@angular/fire/analytics';
+import { Capacitor } from '@capacitor/core';
 import { firebaseConfig } from '../environment/environment';
 
 export const appConfig: ApplicationConfig = {
@@ -17,11 +21,16 @@ export const appConfig: ApplicationConfig = {
     provideIonicAngular({ mode: 'ios' }),
     provideAnimationsAsync(),
     provideHttpClient(),
-    provideFirebaseApp(() =>
-      initializeApp({
-        ...firebaseConfig,
-      }),
-    ),
+    provideFirebaseApp(() => initializeApp(firebaseConfig)),
+    provideAuth(() => {
+      const app = initializeApp(firebaseConfig);
+      if (Capacitor.isNativePlatform()) {
+        return initializeAuth(app, {
+          persistence: indexedDBLocalPersistence,
+        });
+      }
+      return getAuth();
+    }),
     provideAnalytics(() => getAnalytics()),
   ],
 };
