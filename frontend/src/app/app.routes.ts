@@ -1,11 +1,16 @@
 import { Routes } from '@angular/router';
 import { authGuard, loginGuard } from './guards/auth.guard';
 import { consentGuard } from './guards/consent.guard';
+import { onboardingGuard } from './guards/onboarding.guard';
 
 export const routes: Routes = [
   {
     path: 'api-docs',
     loadComponent: () => import('./pages/api-docs/api-docs.page').then(m => m.ApiDocsPage),
+  },
+  {
+    path: 'onboarding',
+    loadComponent: () => import('./pages/onboarding/onboarding.page').then(m => m.OnboardingPage),
   },
   {
     path: 'login',
@@ -15,6 +20,21 @@ export const routes: Routes = [
   {
     path: 'consent',
     loadComponent: () => import('./pages/legal/consent.page').then(m => m.ConsentPage),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'sport-preference',
+    loadComponent: () => import('./pages/onboarding/sport-preference.page').then(m => m.SportPreferencePage),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'favourite-team',
+    loadComponent: () => import('./pages/onboarding/favourite-team.page').then(m => m.FavouriteTeamPage),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'fpl-import',
+    loadComponent: () => import('./pages/onboarding/fpl-import.page').then(m => m.FplImportPage),
     canActivate: [authGuard],
   },
   {
@@ -28,7 +48,7 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () => import('./app.tabs').then(m => m.TabsPage),
-    canActivate: [authGuard, consentGuard],
+    canActivate: [authGuard, consentGuard, onboardingGuard],
     children: [
       {
         path: 'home',

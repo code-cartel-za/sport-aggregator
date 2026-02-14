@@ -231,7 +231,8 @@ export class ConsentPage {
       analyticsConsent: this.analyticsConsent(),
     });
 
-    this.router.navigateByUrl('/', { replaceUrl: true });
+    const onboardingDone = localStorage.getItem('onboarding_complete') === 'true';
+    this.router.navigateByUrl(onboardingDone ? '/' : '/sport-preference', { replaceUrl: true });
   }
 
   openTerms(): void {

@@ -146,7 +146,8 @@ export class LoginPage {
       } else {
         await this.authService.signInWithApple();
       }
-      this.router.navigateByUrl('/home', { replaceUrl: true });
+      const onboardingDone = localStorage.getItem('onboarding_complete') === 'true';
+      this.router.navigateByUrl(onboardingDone ? '/home' : '/consent', { replaceUrl: true });
     } catch (err: any) {
       console.error('Auth error:', err);
       if (err.code === 'auth/popup-closed-by-user') {
