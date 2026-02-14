@@ -1,7 +1,7 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 
-interface FplElement {
+export interface FplElement {
   id: number; first_name: string; second_name: string; web_name: string;
   team: number; element_type: number; now_cost: number; selected_by_percent: string;
   form: string; points_per_game: string; total_points: number; minutes: number;
@@ -17,7 +17,7 @@ interface FplElement {
   status: string; photo: string;
 }
 
-interface FplGameweek {
+export interface FplGameweek {
   id: number; name: string; deadline_time: string; average_entry_score: number;
   finished: boolean; data_checked: boolean; highest_scoring_entry: number | null;
   highest_score: number | null; most_selected: number | null;
@@ -26,23 +26,23 @@ interface FplGameweek {
   chip_plays: { chip_name: string; num_played: number }[];
 }
 
-interface FplBootstrap {
+export interface FplBootstrap {
   elements: FplElement[];
   events: FplGameweek[];
 }
 
-interface FplLiveElement {
+export interface FplLiveElement {
   id: number;
   stats: Record<string, unknown>;
   explain: { fixture: number; stats: { identifier: string; points: number; value: number }[] }[];
 }
 
-interface FplPriceChange {
+export interface FplPriceChange {
   playerId: number; webName: string; team: number;
   oldPrice: number; newPrice: number; change: number;
 }
 
-interface FplPlayerHistory {
+export interface FplPlayerHistory {
   element: number; fixture: number; opponent_team: number; total_points: number;
   was_home: boolean; kickoff_time: string; team_h_score: number; team_a_score: number;
   round: number; minutes: number; goals_scored: number; assists: number;

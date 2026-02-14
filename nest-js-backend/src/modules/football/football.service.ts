@@ -1,21 +1,21 @@
 import { Injectable, Inject } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 
-interface Team {
+export interface Team {
   id: number; name: string; shortName: string; tla: string; crest: string;
   address: string; website: string; founded: number; clubColors: string;
   venue: string; competitionCode: string; coach: Coach | null; squadCount: number;
 }
-interface Coach {
+export interface Coach {
   id: number; firstName: string; lastName: string; name: string;
   dateOfBirth: string; nationality: string; contract: { start: string; until: string } | null;
 }
-interface Player {
+export interface Player {
   id: number; name: string; firstName: string | null; lastName: string | null;
   dateOfBirth: string; nationality: string; position: string; shirtNumber: number | null;
   teamId: number; teamName: string; teamTla: string; competitionCode: string;
 }
-interface Fixture {
+export interface Fixture {
   id: number; competition: { id: number; name: string };
   season: { id: number; startDate: string; endDate: string };
   utcDate: string; status: string; matchday: number;
@@ -23,16 +23,16 @@ interface Fixture {
   awayTeam: { id: number; name: string; shortName: string; tla: string; crest: string };
   score: { winner: string | null; fullTime: { home: number | null; away: number | null }; halfTime: { home: number | null; away: number | null } };
 }
-interface Standing {
+export interface Standing {
   competitionId: number; competitionName: string;
   season: { id: number; startDate: string; endDate: string };
   standings: StandingGroup[];
 }
-interface StandingGroup {
+export interface StandingGroup {
   stage: string; type: string; group: string | null;
   table: StandingRow[];
 }
-interface StandingRow {
+export interface StandingRow {
   position: number;
   team: { id: number; name: string; shortName: string; tla: string; crest: string };
   playedGames: number; form: string | null; won: number; draw: number; lost: number;

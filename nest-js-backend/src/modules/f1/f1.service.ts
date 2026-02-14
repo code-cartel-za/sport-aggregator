@@ -1,35 +1,35 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 
-interface F1DriverStanding {
+export interface F1DriverStanding {
   position: string; positionText: string; points: string; wins: string;
   Driver: { driverId: string; permanentNumber: string; code: string; url: string; givenName: string; familyName: string; dateOfBirth: string; nationality: string };
   Constructors: { constructorId: string; url: string; name: string; nationality: string }[];
 }
 
-interface F1ConstructorStanding {
+export interface F1ConstructorStanding {
   position: string; positionText: string; points: string; wins: string;
   Constructor: { constructorId: string; url: string; name: string; nationality: string };
 }
 
-interface F1Race {
+export interface F1Race {
   season: string; round: string; url: string; raceName: string;
   Circuit: { circuitId: string; url: string; circuitName: string; Location: { lat: string; long: string; locality: string; country: string } };
   date: string; time: string;
 }
 
-interface F1Position {
+export interface F1Position {
   driver_number: number; position: number; date: string; session_key: number; meeting_key: number;
 }
 
-interface F1Lap {
+export interface F1Lap {
   driver_number: number; lap_number: number; lap_duration: number | null;
   duration_sector_1: number | null; duration_sector_2: number | null; duration_sector_3: number | null;
   i1_speed: number | null; i2_speed: number | null; st_speed: number | null;
   is_pit_out_lap: boolean; session_key: number;
 }
 
-interface F1PitStop {
+export interface F1PitStop {
   driver_number: number; pit_duration: number | null; lap_number: number; session_key: number; date: string;
 }
 
