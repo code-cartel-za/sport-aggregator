@@ -28,7 +28,7 @@ import { AuthService } from '../../services/auth.service';
   template: `
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>⚙️ Settings</ion-title>
+        <ion-title><span style="font-family: Outfit, sans-serif; font-weight: 800; letter-spacing: 0.06em; font-size: 1rem; color: var(--accent-gold)">⚙️ SETTINGS</span></ion-title>
       </ion-toolbar>
     </ion-header>
 

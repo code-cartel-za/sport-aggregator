@@ -22,7 +22,7 @@ import { Fixture, League, Standing } from '../../models';
   template: `
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>⚽ Football</ion-title>
+        <ion-title><span style="font-family: Outfit, sans-serif; font-weight: 800; letter-spacing: 0.06em; font-size: 1rem; color: var(--accent-gold)">⚽ FOOTBALL</span></ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -158,7 +158,7 @@ import { Fixture, League, Standing } from '../../models';
       &::-webkit-scrollbar { display: none; }
     }
     .league-logo-chip { width: 18px; height: 18px; margin-right: 4px; }
-    .active-league { --background: #FF6B4A; --color: #fff; }
+    .active-league { --background: var(--accent-gold); --color: var(--bg); }
     .fixture-card { --background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px !important; margin: 6px 0; }
     .match-date { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 8px; }
     .match-row { display: flex; align-items: center; justify-content: space-between; }
@@ -167,7 +167,7 @@ import { Fixture, League, Standing } from '../../models';
     .team-logo-sm { width: 28px; height: 28px; object-fit: contain; }
     .team-logo-xs { width: 20px; height: 20px; object-fit: contain; margin-right: 6px; }
     .match-vs { font-weight: 700; color: var(--text-muted); font-size: 0.8rem; min-width: 40px; text-align: center; }
-    .match-score { font-weight: 800; font-size: 1rem; font-family: 'Sora', sans-serif; min-width: 50px; text-align: center; }
+    .match-score { font-weight: 800; font-size: 1rem; font-family: 'JetBrains Mono', monospace; min-width: 50px; text-align: center; }
     .standings-table { font-size: 0.78rem; }
     .standings-header {
       display: flex; padding: 8px 0; border-bottom: 1px solid var(--card-border);
@@ -177,11 +177,11 @@ import { Fixture, League, Standing } from '../../models';
       display: flex; padding: 10px 0; border-bottom: 1px solid var(--card-border);
       align-items: center;
     }
-    .standings-row.top-4 { border-left: 3px solid #4ADE80; padding-left: 6px; }
+    .standings-row.top-4 { border-left: 3px solid var(--success); padding-left: 6px; }
     .col-pos { width: 24px; text-align: center; font-weight: 700; }
     .col-team { flex: 1; display: flex; align-items: center; font-weight: 600; }
     .col-stat { width: 28px; text-align: center; color: var(--text-secondary); }
-    .col-pts { width: 32px; text-align: center; font-weight: 800; color: #FF6B4A; }
+    .col-pts { width: 32px; text-align: center; font-weight: 800; color: var(--accent-gold); font-family: 'JetBrains Mono', monospace; }
     .empty-state { text-align: center; padding: 40px 16px; color: var(--text-muted); }
     .bottom-spacer { height: 80px; }
   `],
