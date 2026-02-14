@@ -1,173 +1,216 @@
 # 🏟 Sport Aggregator
 
-A mobile-first sport aggregator for **Football** and **Formula 1** — fixtures, standings, race calendars, and pre-match analysis, all in one app.
+A premium fantasy sports insight tool for **FPL (Fantasy Premier League)** and **F1 Fantasy** players. Built with Angular 21, Ionic 8, Firebase, and a "Command Center" design aesthetic.
 
-## ✨ Features
+> **Live insight. Confident picks. Data-driven decisions.**
 
-- **Home Feed** — Upcoming fixtures and races at a glance, filterable by sport
-- **Football** — League selector, fixtures, results, and standings table
-- **Formula 1** — Race calendar (from Ergast API), driver standings, constructor standings
-- **Analysis** — Head-to-head team comparisons and driver-at-circuit performance analysis
-- **Settings** — Dark/light mode, default sport, notification preferences, subscriptions
+---
 
-## 🛠 Tech Stack
+## 🎨 Design System — "Command Center"
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Angular 21 (standalone components, signals) |
-| UI | Ionic 8 (iOS mode) |
-| Components | PrimeNG 21 |
-| Styling | Tailwind CSS 4 + Custom SCSS |
-| APIs | API-Football (mock), OpenF1/Ergast (live+mock) |
-| Mobile | Capacitor 8 (iOS + Android ready) |
-| Fonts | Sora (headings) + DM Sans (body) |
+| Element | Value |
+|---------|-------|
+| Background | `#060D18` deep navy-black |
+| Surfaces | `#0F1A2E` / `#162036` |
+| Accent Gold | `#D4A847` (confidence) |
+| Accent Blue | `#3B82F6` (data) |
+| Headings | **Outfit** |
+| Body | **Plus Jakarta Sans** |
+| Data/Numbers | **JetBrains Mono** |
+
+Glass-morphism cards, gold accent borders, shimmer loading, gradient decorative lines.
+
+---
+
+## 📱 Features
+
+### Core Pages
+| Tab | Page | Description |
+|-----|------|-------------|
+| 🏠 Dashboard | `/home` | Quick-access grid to all features, upcoming fixtures/races |
+| ⚽ Football | `/football` | Fixtures, results, standings with league selector |
+| 🏎 F1 | `/f1` | Race calendar, driver standings, constructor standings |
+| 💡 Insights | `/analysis` | H2H comparison, driver circuit analysis |
+| ⚙️ Settings | `/settings` | Profile, dark mode, preferences, sign out |
+
+### Authentication
+| Feature | Description |
+|---------|-------------|
+| Google Sign-In | OAuth popup via Firebase Auth |
+| Apple Sign-In | OAuth popup via Firebase Auth |
+| Auth Guards | Protected routes, login redirect |
+| Login Page | Branded screen with provider buttons |
+
+### Fantasy Insight Features (10)
+| # | Feature | Route | Description |
+|---|---------|-------|-------------|
+| 1 | 🔮 Points Projector | `/projections` | Projected FPL/F1 points with confidence bars and category breakdown |
+| 2 | 🏆 Dream Team Builder | `/dream-team` | Pick 15-player squad within budget, see projected totals |
+| 3 | 📅 Fixture Difficulty Rating | `/fdr` | Color-coded grid of upcoming 6 fixtures per team |
+| 4 | 👑 Captain Recommender | `/captain` | Ranked captain picks with ×2 projected points |
+| 5 | 📈 Form Tracker | `/form-tracker` | Sparkline form charts over last 10 GWs, trend arrows |
+| 6 | 💎 Differential Finder | `/differentials` | High-value low-ownership picks, points-per-million |
+| 7 | ⚔️ H2H Comparison | `/compare` | Side-by-side player comparison with dual bars |
+| 8 | 👀 Transfer Watchlist | `/watchlist` | Personal watchlist with price tracking, swipe-to-delete |
+| 9 | 📰 Gameweek Digest | `/digest` | Weekly summary, deadline countdown, injury updates |
+| 10 | 🎲 Points Simulator | `/simulator` | "What if" scenario tool for event simulation |
+
+### Backend (Cloud Functions)
+| Function | Description |
+|----------|-------------|
+| `fetchEplTeams` | Pulls all 20 EPL teams → `teams/{teamId}` in Firestore |
+| `fetchEplPlayers` | Pulls all squad members → `players/{playerId}` in Firestore |
+
+---
+
+## 📊 Fantasy Points Scoring
+
+### FPL Scoring Model
+| Event | Points |
+|-------|--------|
+| 60+ minutes played | 1pt |
+| Goal (FWD / MID / DEF,GK) | 4pt / 5pt / 6pt |
+| Assist | 3pt |
+| Clean sheet (DEF,GK / MID) | 4pt / 1pt |
+| Saves (GK, per 3) | 1pt |
+| Bonus | 1-3pt |
+| Yellow card | -1pt |
+| Red card | -3pt |
+| Penalty missed | -2pt |
+| Goals conceded (DEF,GK per 2) | -1pt |
+| Own goal | -2pt |
+
+### F1 Fantasy Scoring
+| Event | Points |
+|-------|--------|
+| Race P1-P10 | 25, 18, 15, 12, 10, 8, 6, 4, 2, 1 |
+| Qualifying Top 3 / Top 5 | 3pt / 1pt |
+| Fastest lap | 1pt |
+| Positions gained | 2pt each |
+| Beat teammate | 5pt |
+| DNF | -15pt |
+| Sprint | Half points |
+
+---
+
+## 🗂 Firestore Collections
+
+```
+competitions/PL          — EPL metadata + current season
+teams/{teamId}           — Team info, coach, venue, crest
+players/{playerId}       — Player name, position, nationality, team ref
+```
+
+---
+
+## 🏗 Tech Stack
+
+| Layer | Tech |
+|-------|------|
+| Frontend | Angular 21, Ionic 8, PrimeNG, Tailwind 4 |
+| Backend | Firebase Cloud Functions (Node 24, TypeScript) |
+| Database | Cloud Firestore |
+| Auth | Firebase Auth (Google + Apple) |
+| Analytics | Firebase Analytics |
+| API Sources | football-data.org, Ergast F1 API, OpenF1 |
+| Native | Capacitor (iOS + Android ready) |
+
+---
 
 ## 📁 Project Structure
 
 ```
-sport-aggregator/
+src/
+├── app/
+│   ├── guards/
+│   │   └── auth.guard.ts           # authGuard + loginGuard
+│   ├── models/
+│   │   ├── f1.model.ts             # F1 types
+│   │   ├── fantasy.model.ts        # Fantasy projection types
+│   │   ├── football.model.ts       # Football types
+│   │   ├── subscription.model.ts   # User preferences
+│   │   └── index.ts
+│   ├── pages/
+│   │   ├── home/                   # Dashboard
+│   │   ├── football/               # Football hub
+│   │   ├── f1/                     # F1 hub
+│   │   ├── analysis/               # Insights (H2H, driver analysis)
+│   │   ├── settings/               # Settings + profile
+│   │   ├── login/                  # Auth page
+│   │   ├── projections/            # Points projector
+│   │   ├── dream-team/             # Squad builder
+│   │   ├── fdr/                    # Fixture difficulty
+│   │   ├── captain/                # Captain recommender
+│   │   ├── form-tracker/           # Form dashboard
+│   │   ├── differentials/          # Differential finder
+│   │   ├── compare/                # H2H comparison
+│   │   ├── watchlist/              # Transfer watchlist
+│   │   ├── digest/                 # Gameweek summary
+│   │   └── simulator/             # Points simulator
+│   ├── services/
+│   │   ├── auth.service.ts         # Firebase Auth
+│   │   ├── football-api.service.ts # Football data
+│   │   ├── f1-api.service.ts       # F1 data (Ergast + OpenF1)
+│   │   ├── analysis.service.ts     # H2H analysis
+│   │   ├── fantasy-projection.service.ts  # Core projection engine
+│   │   ├── fdr.service.ts          # Fixture difficulty
+│   │   ├── watchlist.service.ts    # Watchlist (localStorage)
+│   │   └── subscription.service.ts # Preferences
+│   ├── app.config.ts               # Firebase + Auth providers
+│   ├── app.routes.ts               # All routes
+│   └── app.tabs.ts                 # Tab bar
+├── styles.scss                     # Command Center theme
+└── index.html                      # Fonts + meta
+functions/
 ├── src/
-│   ├── app/
-│   │   ├── models/               # TypeScript interfaces
-│   │   │   ├── football.model.ts # Sport, League, Team, Fixture, Standing, etc.
-│   │   │   ├── f1.model.ts       # Driver, Constructor, Race, Circuit, etc.
-│   │   │   ├── subscription.model.ts  # User subscriptions & preferences
-│   │   │   └── index.ts          # Barrel export
-│   │   ├── services/             # Data & business logic
-│   │   │   ├── football-api.service.ts   # API-Football wrapper (mock data)
-│   │   │   ├── f1-api.service.ts         # OpenF1 + Ergast API wrapper (live!)
-│   │   │   ├── subscription.service.ts   # localStorage-backed subscriptions
-│   │   │   ├── analysis.service.ts       # H2H & driver circuit analysis
-│   │   │   └── index.ts
-│   │   ├── pages/
-│   │   │   ├── home/             # Sport feed — upcoming fixtures & races
-│   │   │   ├── football/         # League fixtures, results, standings
-│   │   │   ├── f1/               # Race calendar, driver & constructor standings
-│   │   │   ├── analysis/         # H2H comparison & driver analysis tools
-│   │   │   └── settings/         # App preferences & subscriptions
-│   │   ├── app.ts                # Root component
-│   │   ├── app.tabs.ts           # Tab bar layout (5 tabs)
-│   │   ├── app.routes.ts         # Lazy-loaded routes
-│   │   ├── app.config.ts         # Providers (router, Ionic, HTTP, animations)
-│   │   └── app.scss
-│   ├── styles.scss               # Global theme (dark-first)
-│   ├── index.html                # Entry HTML with Google Fonts
-│   └── main.ts                   # Bootstrap
-├── angular.json
-├── package.json
-├── tsconfig.json
-└── README.md
+│   └── index.ts                    # fetchEplTeams, fetchEplPlayers
+└── package.json
 ```
 
-## 🔄 Data Flow
+---
 
-```mermaid
-graph TB
-    subgraph UI["📱 UI Layer"]
-        HOME[Home Page]
-        FOOT[Football Page]
-        F1P[F1 Page]
-        ANAL[Analysis Page]
-        SETT[Settings Page]
-    end
-
-    subgraph Services["⚙️ Service Layer"]
-        FAS[FootballApiService]
-        F1S[F1ApiService]
-        ANS[AnalysisService]
-        SUBS[SubscriptionService]
-    end
-
-    subgraph APIs["🌐 External APIs"]
-        APIF["API-Football<br/>(mock → real)"]
-        OF1["OpenF1 API<br/>(free, live)"]
-        ERG["Ergast API<br/>(free, historical)"]
-        LS["localStorage"]
-    end
-
-    HOME --> FAS
-    HOME --> F1S
-    FOOT --> FAS
-    F1P --> F1S
-    ANAL --> ANS
-    ANAL --> FAS
-    ANAL --> F1S
-    SETT --> SUBS
-
-    FAS --> APIF
-    F1S --> OF1
-    F1S --> ERG
-    ANS --> FAS
-    ANS --> F1S
-    SUBS --> LS
-```
-
-## 🏗 Architecture
-
-```mermaid
-graph LR
-    subgraph Angular["Angular 21"]
-        direction TB
-        RC[Root Component] --> TABS[Tab Layout]
-        TABS --> P1[Home]
-        TABS --> P2[Football]
-        TABS --> P3[F1]
-        TABS --> P4[Analysis]
-        TABS --> P5[Settings]
-    end
-
-    subgraph Stack["Stack"]
-        IONIC[Ionic 8]
-        PRIME[PrimeNG]
-        TW[Tailwind CSS 4]
-        CAP[Capacitor 8]
-    end
-
-    Angular --> IONIC
-    Angular --> PRIME
-    Angular --> TW
-    Angular --> CAP
-    CAP --> IOS[iOS]
-    CAP --> AND[Android]
-    CAP --> WEB[Web/PWA]
-```
-
-## 🚀 Getting Started
+## 🚀 Setup
 
 ```bash
 # Install dependencies
-npm install
+npm install --legacy-peer-deps
 
-# Start dev server
-ng serve
+# Run dev server
+npm start
 
-# Build for production
-ng build
+# Build
+npx ng build
 
-# Add mobile platforms
-npx cap add ios
-npx cap add android
-npx cap sync
+# Deploy functions
+cd functions && npm install && npm run deploy
 ```
 
-## 🔌 API Configuration
+### Required Config
+- **Firebase Console**: Enable Google + Apple sign-in providers
+- **football-data.org**: Get free API key, set as `FOOTBALL_DATA_API_KEY` env var
+- **Apple Developer**: Configure Sign in with Apple service ID
 
-### Football (API-Football)
-Currently using mock data. To connect:
-1. Register at [api-sports.io](https://www.api-sports.io/) (free tier: 100 req/day)
-2. Set your API key in `football-api.service.ts`
-3. Uncomment the real API calls
+---
 
-### Formula 1
-- **OpenF1** (`api.openf1.org`) — Free, no API key needed, live session data
-- **Ergast** (`ergast.com/mrd/`) — Free, no key needed, historical data & standings
+## 📋 Changelog
 
-## 📝 Changelog
+### v0.3.0 — Fantasy Insights Overhaul
+- Complete "Command Center" design overhaul (new palette, typography, glass-morphism)
+- Fantasy Points Projection Engine (FPL + F1 scoring models)
+- 10 new fantasy insight features (projections, dream team, FDR, captain picks, form tracker, differentials, H2H compare, watchlist, digest, simulator)
+- Renamed Analysis tab to Insights
+- Dashboard redesign with feature card grid
 
-### v0.1.0 (2026-02-13)
-- 🎉 Initial release
-- ⚽ Football page with fixtures, results, standings (mock data)
-- 🏎 F1 page with race calendar, driver & constructor standings (Ergast API)
-- 📊 Analysis page: football H2H and driver circuit analysis
-- ⚙️ Settings with dark mode, preferences, subscriptions
-- 🏠 Home feed combining football + F1 upcoming events
+### v0.2.0 — Authentication
+- Google & Apple sign-in via Firebase Auth
+- Auth guards on all tab routes
+- Login page with branded UI
+- User profile card + sign out in Settings
+
+### v0.1.0 — Foundation
+- Angular 21 + Ionic 8 + Tailwind 4 scaffold
+- Football page (fixtures, results, standings)
+- F1 page (race calendar, driver/constructor standings)
+- Analysis page (H2H, driver circuit analysis)
+- EPL data ingestion cloud functions (teams + players → Firestore)
+- Dark-first theme with Sora + DM Sans typography
