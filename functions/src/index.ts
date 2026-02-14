@@ -36,3 +36,14 @@ export {
 
 // Cache Management
 export {getCacheStatus, clearCache} from "./handlers/cache.handlers";
+
+// B2B API
+export {
+  b2bGetTeams, b2bGetPlayers, b2bGetFixtures, b2bGetStandings, b2bGetPredictions,
+  b2bGetFplPlayers, b2bGetFplPlayer, b2bGetFplLive, b2bGetFplPrices, b2bGetFplGameweeks,
+  b2bGetF1Standings, b2bGetF1Races, b2bGetF1LivePositions, b2bGetF1LiveLaps, b2bGetF1LivePitstops,
+} from "./handlers/b2b.handlers";
+
+export {
+  b2bCreateApiKey, b2bRevokeApiKey, b2bGetApiKeyUsage,
+} from "./handlers/b2b-admin.handlers";
