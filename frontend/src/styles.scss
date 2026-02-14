@@ -378,5 +378,26 @@ ion-card-content ion-item p {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
+/* ── Loading / Empty / Error States ── */
+
+.error-state {
+  text-align: center; padding: 40px 16px;
+  .error-icon { font-size: 48px; color: var(--danger); margin-bottom: 12px; }
+  h3 { font-family: 'Outfit', sans-serif; font-weight: 700; margin: 0 0 8px; }
+  p { font-size: 0.82rem; color: var(--text-muted); margin: 0 0 16px; }
+}
+
+.empty-state {
+  text-align: center; padding: 40px 16px;
+  .empty-icon { font-size: 48px; color: var(--text-muted); margin-bottom: 12px; }
+  h3 { font-family: 'Outfit', sans-serif; font-weight: 700; margin: 0 0 8px; }
+  p { font-size: 0.82rem; color: var(--text-muted); margin: 0; }
+}
+
+.skeleton-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px; margin: 6px 0;
+}
+
 /* ── Bottom spacer ── */
 .bottom-spacer { height: 80px; }

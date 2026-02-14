@@ -1,18 +1,107 @@
-rules_version='2'
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ═══════════════════════════════════════════
+    //  PUBLIC DATA — anyone can read, no client writes
+    // ═══════════════════════════════════════════
+
+    // Teams, players, fixtures — written by Cloud Functions only
+    match /teams/{teamId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /players/{playerId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /fixtures/{fixtureId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Competitions + subcollections (standings)
+    match /competitions/{code} {
+      allow read: if true;
+      allow write: if false;
+
+      match /standings/{doc} {
+        allow read: if true;
+        allow write: if false;
+      }
+    }
+
+    // FPL data — written by Cloud Functions only
+    match /fpl/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Cache collection — written by Cloud Functions / backend only
+    match /cache/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Leagues metadata
+    match /leagues/{leagueId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ═══════════════════════════════════════════
+    //  USER DATA — authenticated, own data only
+    // ═══════════════════════════════════════════
+
+    match /users/{userId} {
+      // Users can read/write their own profile
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Watchlist subcollection
+      match /watchlist/{itemId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Subscription state
+      match /subscription/{doc} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        // Only backend can write subscription state (Stripe webhook)
+        allow write: if false;
+      }
+
+      // Usage tracking
+      match /usage/{doc} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Preferences
+      match /preferences/{doc} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // ═══════════════════════════════════════════
+    //  B2B API KEYS — backend only, no client access
+    // ═══════════════════════════════════════════
+
+    match /apiKeys/{keyId} {
+      allow read, write: if false;
+    }
+
+    match /apiKeyUsage/{doc} {
+      allow read, write: if false;
+    }
+
+    // ═══════════════════════════════════════════
+    //  DENY ALL — catch-all for unlisted collections
+    // ═══════════════════════════════════════════
+
     match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2026, 3, 15);
+      allow read, write: if false;
     }
   }
 }

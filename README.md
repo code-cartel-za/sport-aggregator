@@ -305,6 +305,26 @@ See [docs/TESTING.md](docs/TESTING.md) for full testing guide.
 
 ## 📋 Changelog
 
+### v0.10.0 — Ship-Ready
+- Firestore security rules (proper per-collection auth, deny-all catch)
+- Capacitor native projects (iOS + Android) with app config
+- CI/CD: GitHub Actions for build/test + auto-deploy functions
+- .env templates for all secrets (functions + NestJS)
+- Error states, loading skeletons, empty states across all pages
+- `.gitignore` updated for native platforms
+
+### v0.9.0 — Onboarding, Payments & Polish
+- Full onboarding flow: carousel → sign-in → consent → sport preference → favourite team → FPL import
+- Onboarding guard blocks app until flow complete
+- Payment integration: RevenueCat (iOS/Android) + Stripe (web)
+- NestJS Stripe endpoints (checkout session, webhook, status, cancel)
+- Data export/deletion Cloud Functions (GDPR/POPI)
+- FPL Firestore service (reads bootstrap from Firestore)
+- Service worker + PWA (offline caching, offline indicator)
+- Personalised dashboard (greeting, tier, GW countdown, live scores, watchlist)
+- Watchlist persistence in Firestore with localStorage fallback
+- B2B type export fix
+
 ### v0.8.0 — Firestore Data Layer & Ingestion
 - **Frontend → Firestore**: Football & F1 services now read directly from Firestore (no mock data, no client API calls)
 - **Firestore provider** added to Angular app config (`@angular/fire/firestore`)
