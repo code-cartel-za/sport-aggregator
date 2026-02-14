@@ -1,41 +1,53 @@
-# Feature: EPL Data Ingestion
+# Sport Aggregator — Data Pipeline
 
-## Goal
-Pull English Premier League team and player data from football-data.org and store in Firestore.
+## Architecture
+All functions are Firebase Cloud Functions using `onRequest` (HTTP-triggered).
+Firestore is used for caching with configurable TTL per endpoint.
 
-## Cloud Functions (onRequest)
+## Functions
 
-### `fetchEplTeams`
-- Fetches all 20 EPL teams from `/competitions/PL/teams`
-- Stores competition metadata in `competitions/PL`
-- Stores each team in `teams/{teamId}` with coach info, venue, crest, etc.
+### Football Data (football-data.org)
+- `fetchEplTeams` — Fetches and stores all EPL teams with coach data
+- `fetchEplPlayers` — Fetches and stores all EPL players from squad data
 
-### `fetchEplPlayers`
-- Fetches all squads (comes bundled with the teams endpoint)
-- Stores each player in `players/{playerId}` with team reference, position, nationality, etc.
+### FPL (fantasy.premierleague.com)
+- `syncFplBootstrap` — Syncs full bootstrap data (elements, teams, events), cache 24h
+- `getFplLivePoints` — Live GW points, cache 60s. Param: `gw` (1-38)
+- `getFplPriceChanges` — Detects price changes vs cached bootstrap
+- `getFplPlayerSummary` — Player fixture/history data, cache 6h. Param: `playerId`
 
-## Firestore Collections
+### API-Football (api-sports.io)
+- `getLiveScores` — All live fixtures, cache 30s
+- `getMatchEvents` — Match events, cache 30s. Param: `fixtureId`
+- `getMatchLineups` — Match lineups, cache 2h. Param: `fixtureId`
+- `getMatchStats` — Match statistics, cache 30s. Param: `fixtureId`
+- `getMatchPredictions` — Match predictions, cache 12h. Param: `fixtureId`
 
-### `competitions`
-- Doc ID: competition code (e.g. `PL`)
-- Fields: name, emblem, country, currentSeason
+### OpenF1 / Jolpica
+- `getF1Positions` — Position data, cache 5s. Param: `sessionKey`
+- `getF1Laps` — Lap data, cache 10s. Params: `sessionKey`, `driverNumber` (optional)
+- `getF1PitStops` — Pit stop data, cache 15s. Param: `sessionKey`
+- `getF1RaceControl` — Race control messages, cache 10s. Param: `sessionKey`
+- `getF1Intervals` — Interval data, cache 10s. Param: `sessionKey`
+- `syncF1Standings` — Driver & constructor standings from Jolpica, cache 24h
 
-### `teams`
-- Doc ID: team ID from API (numeric string)
-- Fields: name, shortName, tla, crest, venue, founded, clubColors, coach, squadCount
+### Cache Management
+- `getCacheStatus` — Lists all cache entries with staleness info
+- `clearCache` — Clears specific key or all. Param: `key` (optional)
 
-### `players`
-- Doc ID: player ID from API (numeric string)
-- Fields: name, firstName, lastName, dateOfBirth, nationality, position, shirtNumber, teamId, teamName, teamTla
+## Type System
+All types in `@types/` with barrel exports:
+- `common/` — ApiResponse<T>, ApiError, CacheDoc<T>, CacheStatusEntry
+- `football/` — Competition, Team, Player, Fixture, Standing types
+- `fpl/` — FplElement, FplTeam, FplGameweek, FplLive, FplFixture types
+- `f1/` — F1Driver, F1Position, F1Lap, F1PitStop, F1Interval, F1RaceControl, F1Session types
 
-## API
-- Source: football-data.org (free tier, 10 req/min)
-- Auth: `FOOTBALL_DATA_API_KEY` env var → `X-Auth-Token` header
-- EPL competition code: `PL`
+## Utils
+- `cache.ts` — Firestore-backed cache with TTL (getCached, setCache, getOrFetch)
+- `validation.ts` — Input validation with ValidationError
+- `error-handler.ts` — AppError, ValidationError, ExternalApiError, handleError
+- `api-clients.ts` — Configured axios instances for all external APIs
 
-## Progress
-- [x] Created `fetchEplTeams` cloud function
-- [x] Created `fetchEplPlayers` cloud function
-- [x] TypeScript compiles clean
-- [ ] Deploy & test
-- [ ] Review data structure with team
+## Environment Variables
+- `FOOTBALL_DATA_API_KEY` — football-data.org API key
+- `API_FOOTBALL_KEY` — api-sports.io API key
