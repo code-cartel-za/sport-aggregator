@@ -5,7 +5,7 @@ admin.initializeApp();
 setGlobalOptions({maxInstances: 10});
 
 // Football Data
-export {fetchEplTeams, fetchEplPlayers} from "./handlers/football-data.handlers";
+export {fetchEplTeams, fetchEplPlayers, syncFixtures, syncStandings} from "./handlers/football-data.handlers";
 
 // FPL
 export {
@@ -32,6 +32,7 @@ export {
   getF1RaceControl,
   getF1Intervals,
   syncF1Standings,
+  syncF1Races,
 } from "./handlers/f1.handlers";
 
 // Cache Management

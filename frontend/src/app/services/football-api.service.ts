@@ -1,9 +1,11 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Observable, from, of, map } from 'rxjs';
+import {
+  Firestore, collection, doc, getDoc, getDocs, query, where, orderBy, limit,
+} from '@angular/fire/firestore';
 import { Fixture, League, Standing, HeadToHead, Team } from '../models';
 
-const MOCK_LEAGUES: League[] = [
+const HARDCODED_LEAGUES: League[] = [
   { id: 39, name: 'Premier League', country: 'England', logo: 'https://media.api-sports.io/football/leagues/39.png', season: 2025 },
   { id: 140, name: 'La Liga', country: 'Spain', logo: 'https://media.api-sports.io/football/leagues/140.png', season: 2025 },
   { id: 135, name: 'Serie A', country: 'Italy', logo: 'https://media.api-sports.io/football/leagues/135.png', season: 2025 },
@@ -12,108 +14,144 @@ const MOCK_LEAGUES: League[] = [
   { id: 2, name: 'Champions League', country: 'Europe', logo: 'https://media.api-sports.io/football/leagues/2.png', season: 2025 },
 ];
 
-const MOCK_TEAMS: Record<number, Team[]> = {
-  39: [
-    { id: 33, name: 'Manchester United', logo: 'https://media.api-sports.io/football/teams/33.png', code: 'MUN' },
-    { id: 40, name: 'Liverpool', logo: 'https://media.api-sports.io/football/teams/40.png', code: 'LIV' },
-    { id: 49, name: 'Chelsea', logo: 'https://media.api-sports.io/football/teams/49.png', code: 'CHE' },
-    { id: 50, name: 'Manchester City', logo: 'https://media.api-sports.io/football/teams/50.png', code: 'MCI' },
-    { id: 42, name: 'Arsenal', logo: 'https://media.api-sports.io/football/teams/42.png', code: 'ARS' },
-    { id: 47, name: 'Tottenham', logo: 'https://media.api-sports.io/football/teams/47.png', code: 'TOT' },
-  ],
-};
+const PL_LEAGUE = HARDCODED_LEAGUES[0];
 
-function mockFixture(id: number, home: Team, away: Team, league: League, daysFromNow: number, status: string = 'NS'): Fixture {
-  const d = new Date();
-  d.setDate(d.getDate() + daysFromNow);
-  const isFinished = status === 'FT';
+function mapFirestoreFixture(d: any): Fixture {
+  const homeTeam = d.homeTeam || {};
+  const awayTeam = d.awayTeam || {};
+  const score = d.score || {};
+  const isFinished = d.status === 'FINISHED';
+  const fullHome = score.fullTime?.home ?? score.fulltime?.home ?? null;
+  const fullAway = score.fullTime?.away ?? score.fulltime?.away ?? null;
+  const halfHome = score.halfTime?.home ?? score.halftime?.home ?? null;
+  const halfAway = score.halfTime?.away ?? score.halftime?.away ?? null;
+
   return {
-    id,
-    date: d.toISOString(),
-    timestamp: Math.floor(d.getTime() / 1000),
-    venue: { id: 1, name: 'Stadium', city: 'City' },
-    status: { long: isFinished ? 'Match Finished' : 'Not Started', short: status, elapsed: isFinished ? 90 : undefined },
-    league,
-    teams: {
-      home: { ...home, winner: isFinished ? true : null },
-      away: { ...away, winner: isFinished ? false : null },
+    id: d.id,
+    date: d.utcDate || d.date || '',
+    timestamp: d.utcDate ? Math.floor(new Date(d.utcDate).getTime() / 1000) : 0,
+    venue: { id: 0, name: '', city: '' },
+    status: {
+      long: isFinished ? 'Match Finished' : d.status || 'Not Started',
+      short: isFinished ? 'FT' : d.status === 'SCHEDULED' ? 'NS' : (d.status || 'NS'),
+      elapsed: isFinished ? 90 : undefined,
     },
-    goals: { home: isFinished ? 2 : null, away: isFinished ? 1 : null },
+    league: PL_LEAGUE,
+    teams: {
+      home: {
+        id: homeTeam.id || 0,
+        name: homeTeam.name || '',
+        logo: homeTeam.crest || homeTeam.logo || '',
+        code: homeTeam.tla || homeTeam.code,
+        winner: isFinished && fullHome !== null && fullAway !== null ? fullHome > fullAway : null,
+      },
+      away: {
+        id: awayTeam.id || 0,
+        name: awayTeam.name || '',
+        logo: awayTeam.crest || awayTeam.logo || '',
+        code: awayTeam.tla || awayTeam.code,
+        winner: isFinished && fullHome !== null && fullAway !== null ? fullAway > fullHome : null,
+      },
+    },
+    goals: { home: fullHome, away: fullAway },
     score: {
-      halftime: { home: isFinished ? 1 : null, away: isFinished ? 0 : null },
-      fulltime: { home: isFinished ? 2 : null, away: isFinished ? 1 : null },
+      halftime: { home: halfHome, away: halfAway },
+      fulltime: { home: fullHome, away: fullAway },
     },
   };
 }
 
-const PL = MOCK_LEAGUES[0];
-const T = MOCK_TEAMS[39]!;
-
-const MOCK_FIXTURES: Fixture[] = [
-  mockFixture(1001, T[0], T[1], PL, 1),
-  mockFixture(1002, T[2], T[3], PL, 1),
-  mockFixture(1003, T[4], T[5], PL, 2),
-  mockFixture(1004, T[3], T[0], PL, 3),
-  mockFixture(1005, T[1], T[4], PL, -1, 'FT'),
-  mockFixture(1006, T[5], T[2], PL, -2, 'FT'),
-];
-
-function mockStandings(): Standing[] {
-  return T.map((team, i) => ({
-    rank: i + 1,
-    team,
-    points: 30 - i * 4,
-    goalsDiff: 20 - i * 5,
-    played: 15,
-    win: 10 - i,
-    draw: i,
-    lose: 5 + i,
-    goalsFor: 35 - i * 3,
-    goalsAgainst: 15 + i * 2,
-    form: 'WWDLW',
-  }));
-}
-
 @Injectable({ providedIn: 'root' })
 export class FootballApiService {
-  // private apiUrl = 'https://v3.football.api-sports.io';
-  // private apiKey = ''; // Set your API-Football key here
-
-  constructor(private http: HttpClient) {}
+  private firestore = inject(Firestore);
 
   getLeagues(): Observable<League[]> {
-    return of(MOCK_LEAGUES);
+    return of(HARDCODED_LEAGUES);
   }
 
-  getTeams(leagueId: number): Observable<Team[]> {
-    return of(MOCK_TEAMS[leagueId] ?? T);
+  getTeams(leagueId?: number): Observable<Team[]> {
+    return from(getDocs(collection(this.firestore, 'teams'))).pipe(
+      map(snapshot => snapshot.docs.map(d => {
+        const data = d.data();
+        return {
+          id: data['id'],
+          name: data['name'],
+          logo: data['crest'] || '',
+          code: data['tla'],
+          country: 'England',
+          founded: data['founded'],
+          venue: data['venue'],
+        } as Team;
+      })),
+    );
   }
 
   getFixtures(leagueId?: number, next?: number): Observable<Fixture[]> {
-    let fixtures = MOCK_FIXTURES;
-    if (leagueId) fixtures = fixtures.filter(f => f.league.id === leagueId);
-    if (next) fixtures = fixtures.filter(f => f.status.short === 'NS').slice(0, next);
-    return of(fixtures);
+    return from(getDoc(doc(this.firestore, 'cache', 'fixtures'))).pipe(
+      map(snap => {
+        const data = snap.data();
+        const fixtures: any[] = data?.['fixtures'] || [];
+        let mapped = fixtures.map(mapFirestoreFixture);
+        // Filter to upcoming (not finished)
+        mapped = mapped.filter(f => f.status.short !== 'FT');
+        // Sort by date
+        mapped.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        if (next) mapped = mapped.slice(0, next);
+        return mapped;
+      }),
+    );
   }
 
   getResults(leagueId?: number, last?: number): Observable<Fixture[]> {
-    let results = MOCK_FIXTURES.filter(f => f.status.short === 'FT');
-    if (leagueId) results = results.filter(f => f.league.id === leagueId);
-    if (last) results = results.slice(-last);
-    return of(results);
+    return from(getDoc(doc(this.firestore, 'cache', 'fixtures'))).pipe(
+      map(snap => {
+        const data = snap.data();
+        const fixtures: any[] = data?.['fixtures'] || [];
+        let mapped = fixtures.map(mapFirestoreFixture);
+        mapped = mapped.filter(f => f.status.short === 'FT');
+        mapped.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        if (last) mapped = mapped.slice(0, last);
+        return mapped;
+      }),
+    );
   }
 
   getStandings(leagueId: number): Observable<Standing[]> {
-    return of(mockStandings());
+    return from(getDoc(doc(this.firestore, 'competitions', 'PL', 'standings', 'current'))).pipe(
+      map(snap => {
+        const data = snap.data();
+        const standings: any[] = data?.['standings'] || [];
+        // standings may be nested: standings[0].table or flat array
+        let table: any[] = [];
+        if (standings.length > 0 && standings[0].table) {
+          table = standings[0].table;
+        } else {
+          table = standings;
+        }
+        return table.map((s: any) => ({
+          rank: s.position || s.rank || 0,
+          team: {
+            id: s.team?.id || 0,
+            name: s.team?.name || '',
+            logo: s.team?.crest || s.team?.logo || '',
+            code: s.team?.tla || s.team?.code,
+          } as Team,
+          points: s.points || 0,
+          goalsDiff: s.goalDifference ?? s.goalsDiff ?? 0,
+          played: s.playedGames ?? s.played ?? 0,
+          win: s.won ?? s.win ?? 0,
+          draw: s.draw ?? 0,
+          lose: s.lost ?? s.lose ?? 0,
+          goalsFor: s.goalsFor ?? 0,
+          goalsAgainst: s.goalsAgainst ?? 0,
+          form: s.form || '',
+        } as Standing));
+      }),
+    );
   }
 
   getHeadToHead(team1Id: number, team2Id: number): Observable<HeadToHead[]> {
-    const t1 = T.find(t => t.id === team1Id) ?? T[0];
-    const t2 = T.find(t => t.id === team2Id) ?? T[1];
-    return of([
-      { fixture: mockFixture(2001, t1, t2, PL, -30, 'FT'), teams: { home: t1, away: t2 }, goals: { home: 2, away: 1 } },
-      { fixture: mockFixture(2002, t2, t1, PL, -60, 'FT'), teams: { home: t2, away: t1 }, goals: { home: 0, away: 3 } },
-      { fixture: mockFixture(2003, t1, t2, PL, -120, 'FT'), teams: { home: t1, away: t2 }, goals: { home: 1, away: 1 } },
-    ]);
+    // H2H not stored in Firestore yet — return empty
+    return of([]);
   }
 }

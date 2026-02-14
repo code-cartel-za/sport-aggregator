@@ -11,6 +11,7 @@ import {
   initializeAuth, provideAuth,
 } from '@angular/fire/auth';
 import { getAnalytics, provideAnalytics } from '@angular/fire/analytics';
+import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import { Capacitor } from '@capacitor/core';
 import { firebaseConfig } from '../environment/environment';
 
@@ -32,5 +33,6 @@ export const appConfig: ApplicationConfig = {
       return getAuth();
     }),
     provideAnalytics(() => getAnalytics()),
+    provideFirestore(() => getFirestore()),
   ],
 };

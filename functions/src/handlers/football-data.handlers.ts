@@ -5,6 +5,14 @@ import {footballDataClient} from "../utils/api-clients";
 import {handleError} from "../utils/error-handler";
 import {ApiResponse, Team, Player, Competition} from "../@types";
 
+interface MatchesApiResponse {
+  matches: Array<Record<string, unknown>>;
+}
+
+interface StandingsApiResponse {
+  standings: Array<Record<string, unknown>>;
+}
+
 const db = admin.firestore();
 
 interface TeamsApiResponse {
@@ -203,6 +211,85 @@ export const fetchEplPlayers = onRequest(async (_req, res) => {
     }> = {
       success: true,
       data: {totalPlayers, teamsCount: teams.length, teams: teamSummaries},
+      timestamp: new Date().toISOString(),
+    };
+    res.json(apiResponse);
+  } catch (error: unknown) {
+    handleError(error, res);
+  }
+});
+
+export const syncFixtures = onRequest(async (_req, res) => {
+  try {
+    logger.info("Syncing PL fixtures from football-data.org");
+
+    const response = await footballDataClient.get<MatchesApiResponse>(
+      "/competitions/PL/matches"
+    );
+    const matches = response.data.matches || [];
+
+    // Write individual fixture docs in batches of 500
+    const batchSize = 500;
+    for (let i = 0; i < matches.length; i += batchSize) {
+      const batch = db.batch();
+      const chunk = matches.slice(i, i + batchSize);
+      for (const match of chunk) {
+        const matchId = (match as any).id;
+        if (matchId) {
+          const ref = db.collection("fixtures").doc(String(matchId));
+          batch.set(ref, {
+            ...match,
+            lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+          }, {merge: true});
+        }
+      }
+      await batch.commit();
+    }
+
+    // Write cache doc with all fixtures
+    await db.collection("cache").doc("fixtures").set({
+      fixtures: matches,
+      lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    logger.info(`Stored ${matches.length} PL fixtures`);
+
+    const apiResponse: ApiResponse<{fixturesCount: number}> = {
+      success: true,
+      data: {fixturesCount: matches.length},
+      timestamp: new Date().toISOString(),
+    };
+    res.json(apiResponse);
+  } catch (error: unknown) {
+    handleError(error, res);
+  }
+});
+
+export const syncStandings = onRequest(async (_req, res) => {
+  try {
+    logger.info("Syncing PL standings from football-data.org");
+
+    const response = await footballDataClient.get<StandingsApiResponse>(
+      "/competitions/PL/standings"
+    );
+    const standings = response.data.standings || [];
+
+    await db.collection("competitions").doc("PL")
+      .collection("standings").doc("current").set({
+        standings,
+        lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+    await db.collection("cache").doc("standings_PL").set({
+      standings,
+      lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    logger.info("Stored PL standings");
+
+    const apiResponse: ApiResponse<{standingsGroups: number}> = {
+      success: true,
+      data: {standingsGroups: standings.length},
       timestamp: new Date().toISOString(),
     };
     res.json(apiResponse);

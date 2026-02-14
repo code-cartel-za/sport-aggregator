@@ -1,5 +1,6 @@
 import {onRequest} from "firebase-functions/https";
 import * as logger from "firebase-functions/logger";
+import * as admin from "firebase-admin";
 import {openF1Client, jolpicaClient} from "../utils/api-clients";
 import {getOrFetch} from "../utils/cache";
 import {validateNumberParam, validateOptionalNumberParam} from "../utils/validation";
@@ -14,6 +15,8 @@ import {
   F1DriverStanding,
   F1ConstructorStanding,
 } from "../@types";
+
+const db = admin.firestore();
 
 const FIVE_SECONDS: number = 5 * 1000;
 const TEN_SECONDS: number = 10 * 1000;
@@ -250,10 +253,60 @@ export const syncF1Standings = onRequest(async (_req, res) => {
       {ttlMs: TWENTY_FOUR_HOURS}
     );
 
+    // Write to dedicated Firestore docs for frontend reads
+    await Promise.all([
+      db.collection("cache").doc("f1_standings_drivers").set({
+        standings: result.data.driverStandings,
+        lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+      }),
+      db.collection("cache").doc("f1_standings_constructors").set({
+        standings: result.data.constructorStandings,
+        lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+      }),
+    ]);
+
     const apiResponse: ApiResponse<F1StandingsData> = {
       success: true,
       data: result.data,
       fromCache: result.fromCache,
+      timestamp: new Date().toISOString(),
+    };
+    res.json(apiResponse);
+  } catch (error: unknown) {
+    handleError(error, res);
+  }
+});
+
+interface JolpicaRaceCalendarResponse {
+  MRData: {
+    RaceTable: {
+      season: string;
+      Races: Array<Record<string, unknown>>;
+    };
+  };
+}
+
+export const syncF1Races = onRequest(async (_req, res) => {
+  try {
+    logger.info("Syncing F1 race calendar from Jolpica");
+
+    const year = new Date().getFullYear();
+    const response = await jolpicaClient.get<JolpicaRaceCalendarResponse>(
+      `/${year}.json`
+    );
+
+    const races = response.data.MRData.RaceTable.Races || [];
+
+    await db.collection("cache").doc(`f1_races_${year}`).set({
+      races,
+      lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    logger.info(`Stored ${races.length} F1 races for ${year}`);
+
+    const apiResponse: ApiResponse<{racesCount: number; season: number}> = {
+      success: true,
+      data: {racesCount: races.length, season: year},
       timestamp: new Date().toISOString(),
     };
     res.json(apiResponse);
