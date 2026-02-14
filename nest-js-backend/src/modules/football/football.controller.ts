@@ -1,6 +1,6 @@
 import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiSecurity, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { FootballService } from './football.service';
+import { FootballService, Team, Player, Fixture, Standing } from './football.service';
 import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import { B2bResponseInterceptor } from '../../common/interceptors/response.interceptor';
 import { GetTeamsDto } from './dto/get-teams.dto';

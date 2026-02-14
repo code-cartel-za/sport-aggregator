@@ -1,6 +1,6 @@
 import { Controller, Get, Query, Param, UseGuards, UseInterceptors, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiSecurity, ApiOperation, ApiResponse, ApiQuery, ApiParam } from '@nestjs/swagger';
-import { FplService } from './fpl.service';
+import { FplService, FplElement, FplPlayerHistory, FplLiveElement, FplPriceChange, FplGameweek } from './fpl.service';
 import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import { B2bResponseInterceptor } from '../../common/interceptors/response.interceptor';
 import { GetFplPlayersDto, GetFplLiveDto } from './dto/get-players.dto';

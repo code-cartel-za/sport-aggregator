@@ -1,6 +1,6 @@
 import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiSecurity, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
-import { F1Service } from './f1.service';
+import { F1Service, F1DriverStanding, F1ConstructorStanding, F1Race, F1Position, F1Lap, F1PitStop } from './f1.service';
 import { ApiKeyGuard } from '../../common/guards/api-key.guard';
 import { B2bResponseInterceptor } from '../../common/interceptors/response.interceptor';
 import { GetF1StandingsDto, GetF1RacesDto, GetF1LivePositionsDto, GetF1LiveLapsDto, GetF1PitStopsDto } from './dto/query.dto';
